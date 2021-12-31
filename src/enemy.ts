@@ -13,19 +13,24 @@ export class Enemy extends GameObject {
     protected readonly id : number;
 
     protected scale : Vector2;
+    protected angle : number;
     protected flip : Flip;
+    protected dir : number;
 
 
     constructor(x : number, y : number, dir : number, id : number) {
 
         super(x, y, true);
 
-        this.friction = new Vector2(0.1, 0.1);
+        this.friction = new Vector2(0.5, 0.5);
         this.sprite = new Sprite(256, 256);
         this.sprite.setFrame(0, id);
 
         this.scale = new Vector2(1, 1);
         this.flip = Flip.None;
+
+        this.angle = 0;
+        this.dir = dir;
 
         this.id = id;
     }
@@ -57,10 +62,11 @@ export class Enemy extends GameObject {
         canvas.transform
             .push()
             .translate(this.pos.x, this.pos.y)
+            .rotate(this.angle)
             .scale(this.scale.x, this.scale.y)
             .use();
 
-        canvas.setColor();
+        // canvas.setColor();
         canvas.drawSprite(this.sprite, bmp, 
             -this.sprite.width/2, 
             -this.sprite.height/2,
@@ -96,9 +102,11 @@ class VerticalMushroom extends Enemy {
         this.speed.y = this.target.y;
         this.friction.y = 0.40;
 
-        this.scale = new Vector2(0.5, 0.5);
+        this.scale = new Vector2(0.67, 0.67);
 
         this.wave = 0.0;
+
+        this.sprite.setFrame(0, 0);
     }
 
 
@@ -125,7 +133,48 @@ class VerticalMushroom extends Enemy {
 }
 
 
-const ENEMY_TYPES = [VerticalMushroom];
+class JumpingFish extends Enemy {
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 1);
+
+        const JUMP_HEIGHT_MIN = -10.0;
+        const JUMP_HEIGHT_MAX = -16.0;
+        const H_SPEED_MIN = 0.5;
+        const H_SPEED_MAX = 5.0;
+        const GRAVITY = 12.0;
+
+        this.target.y = VerticalMushroom.FLY_SPEED;
+        this.speed.y = this.target.y;
+        this.friction.y = 0.167;
+
+        this.scale = new Vector2(0.60, 0.60);
+        
+        this.speed.x = ((Math.random() * (H_SPEED_MAX - H_SPEED_MIN)) + H_SPEED_MIN) * dir;
+        this.speed.y = ((Math.random() * (JUMP_HEIGHT_MAX - JUMP_HEIGHT_MIN)) + JUMP_HEIGHT_MIN) | 0;
+
+        this.target.x = this.speed.x;
+        this.target.y = GRAVITY;
+
+        this.sprite.setFrame(3, 0);
+
+        this.flip = dir > 0 ? Flip.None : Flip.Horizontal;
+    }
+
+
+    protected updateAI(event: CoreEvent): void {
+        
+        let s = new Vector2(this.speed.x * this.dir, this.speed.y);
+        let dir = Vector2.normalize(s, true);
+        this.angle = this.dir * Math.atan2(dir.y, dir.x);
+    }
+
+}
+
+
+const ENEMY_TYPES = [VerticalMushroom, JumpingFish];
 
 
 export const getEnemyType = (id : number) : Function => 

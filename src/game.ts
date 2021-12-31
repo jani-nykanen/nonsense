@@ -25,6 +25,33 @@ export class GameScene implements Scene {
     }
 
 
+    private drawShadowLayer(canvas : Canvas) {
+
+        const SHADOW_OFFSET_X = 8;
+        const SHADOW_OFFSET_Y = 8;
+
+        // TODO: Use stencil buffer in future?
+
+        canvas.setColor(0, 0, 0);
+        canvas.transform
+            .push()
+            .translate(SHADOW_OFFSET_X, SHADOW_OFFSET_Y)
+            .use();
+
+        this.enemyGen.draw(canvas);
+
+        canvas.transform.pop();
+
+        canvas.changeShader(ShaderType.NoTexture);
+
+        canvas.setColor(0.33, 0.67, 1.0, 0.67);
+        canvas.fillRect();
+
+        canvas.changeShader(ShaderType.Textured);
+        canvas.setColor();
+    }
+
+
     public redraw(canvas: Canvas) : void {
         
         canvas.changeShader(ShaderType.NoTexture);
@@ -34,11 +61,12 @@ export class GameScene implements Scene {
             .setView(canvas.width, canvas.height)
             .use();
 
-        canvas.setColor(0.67, 0.67, 0.67);
+        canvas.setColor(0.33, 0.67, 1.0);
         canvas.fillRect();
 
         canvas.changeShader(ShaderType.Textured);
 
+        this.drawShadowLayer(canvas);
         this.enemyGen.draw(canvas);
 
         canvas.transform

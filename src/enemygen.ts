@@ -41,8 +41,9 @@ export class EnemyGenerator {
 
         let x = (Math.random() * (GAME_REGION_WIDTH - OFFSET*2)) + OFFSET;
         let y = GAME_REGION_HEIGHT + OFFSET;
+        let dir = Math.random() < 0.5 ? 1 : -1;
 
-        let enemy = <Enemy>(new enemyType.prototype.constructor(x, y));
+        let enemy = <Enemy>(new enemyType.prototype.constructor(x, y, dir));
         this.enemies.push(enemy);
     }
 

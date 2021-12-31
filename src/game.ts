@@ -1,19 +1,27 @@
 import { Canvas, ShaderType, TextAlign } from "./canvas.js";
 import { CoreEvent, Scene } from "./core.js";
+import { EnemyGenerator } from "./enemygen.js";
+
+
+export const GAME_REGION_WIDTH = 1024;
+export const GAME_REGION_HEIGHT = 768;
 
 
 export class GameScene implements Scene {
 
 
+    private enemyGen : EnemyGenerator;
+
+
     constructor(param : any, event : CoreEvent) {
 
-        // ...
+        this.enemyGen = new EnemyGenerator();
     }
 
 
     public update(event: CoreEvent) : void {
         
-        // ...
+        this.enemyGen.update(event);
     }
 
 
@@ -30,6 +38,12 @@ export class GameScene implements Scene {
         canvas.fillRect();
 
         canvas.changeShader(ShaderType.Textured);
+
+        this.enemyGen.draw(canvas);
+
+        canvas.transform
+            .loadIdentity()
+            .use();
 
         canvas.setColor();
         canvas.drawText(canvas.assets.getBitmap("font"),

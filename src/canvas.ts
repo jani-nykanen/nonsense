@@ -3,6 +3,7 @@ import { Bitmap, FilterType } from "./bitmap.js";
 import { Mesh } from "./mesh.js";
 import { Shader } from "./shader.js";
 import { FragmentSource, VertexSource } from "./shadersource.js";
+import { Sprite } from "./sprite.js";
 import { Transformations } from "./transformations.js";
 import { RGBA, Vector3 } from "./vector.js";
 
@@ -323,6 +324,23 @@ export class Canvas {
         this.bindTexture(bmp);
 
         this.rectangle.draw(this.glCtx);
+    }
+
+
+    public drawSprite(spr : Sprite, bmp : Bitmap, 
+        dx : number, dy : number, dw = this.width, dh = this.height,
+        flip = Flip.None) {
+
+        spr.draw(this, bmp, dx, dy, dw, dh, flip);
+    }
+
+
+    public drawSpriteFrame(spr : Sprite, bmp : Bitmap, 
+        column : number, row : number, 
+        dx : number, dy : number, dw = this.width, dh = this.height,
+        flip = Flip.None) {
+
+        this.drawSprite(spr, bmp, dx, dy, dw, dh, flip);
     }
 
 

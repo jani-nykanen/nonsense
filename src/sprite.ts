@@ -97,6 +97,12 @@ export class Sprite {
             dx += dw;
             dw *= -1;
         }
+
+        if (flip == Flip.Vertical) {
+
+            dy += dh;
+            dh *= -1;
+        }
             
         canvas.drawBitmapRegion(bmp, 
             this.width * column, this.height * row, 

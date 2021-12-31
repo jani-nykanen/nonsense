@@ -12,11 +12,9 @@ export const enum ShaderType {
 
     Textured = 0,
     NoTexture = 1,
-    TexturedLight = 2,
-    NoTextureLight = 3,
-    NoTextureFogAndLight = 4,
+    TexturedFilter = 2,
 };
-const SHADER_TYPE_COUNT = 5;
+const SHADER_TYPE_COUNT = 3;
 
 
 export const enum Flip {
@@ -79,6 +77,9 @@ export class Canvas {
 
     private framebuffer : Bitmap;
 
+    private filterContrast : number;
+    private filterEnabled : boolean;
+
     public readonly transform : Transformations;
     public readonly assets : AssetManager;
 
@@ -109,6 +110,8 @@ export class Canvas {
             VertexSource.Textured, FragmentSource.Textured); 
         this.shaders[ShaderType.NoTexture] = new Shader(this.glCtx, 
             VertexSource.NoTexture, FragmentSource.NoTexture); 
+        this.shaders[ShaderType.TexturedFilter] = new Shader(this.glCtx, 
+            VertexSource.Textured, FragmentSource.TexturedFilter);    
 
         this.activeShader = this.shaders[0];
         this.activeShader.use();
@@ -122,6 +125,9 @@ export class Canvas {
         this.activeTexture = null;
         this.activeMesh = null;
         this.activeColor = new RGBA(1, 1, 1, 1);
+
+        this.filterContrast = 1.0;
+        this.filterEnabled = false;
     }
 
 
@@ -340,7 +346,7 @@ export class Canvas {
         dx : number, dy : number, dw = this.width, dh = this.height,
         flip = Flip.None) {
 
-        this.drawSprite(spr, bmp, dx, dy, dw, dh, flip);
+        spr.drawFrame(this, bmp, column, row, dx, dy, dw, dh, flip);
     }
 
 
@@ -469,7 +475,19 @@ export class Canvas {
         this.setColor();
 
         let oldShader = this.activeShader;
-        this.changeShader(ShaderType.Textured);
+
+        if (this.filterEnabled) {
+
+            this.changeShader(ShaderType.TexturedFilter);
+            this.activeShader.setFilter(
+                dx, dy, dw, dh, 
+                this.filterContrast);
+        }
+        else {
+
+            this.changeShader(ShaderType.Textured);
+        }
+
         this.drawBitmap(this.framebuffer, dx, dy + dh, 
             dw, -dh);
 
@@ -478,4 +496,17 @@ export class Canvas {
         this.useShader(oldShader);
     }
       
+
+    public toggleFilter(filterTexture : Bitmap, contrast = 0.0) {
+
+        this.filterContrast = contrast;
+        this.filterEnabled = true;
+
+        let gl = this.glCtx;
+
+        gl.activeTexture(gl.TEXTURE1);
+        filterTexture.bind(gl);
+
+        gl.activeTexture(gl.TEXTURE0);
+    }
 }

@@ -4,7 +4,7 @@ import { Enemy, getEnemyType, getEnemyTypeCount } from "./enemy.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
 
 
-const TIMER_COUNT = 1;
+const TIMER_COUNT = 2;
 
 
 export class EnemyGenerator {
@@ -23,27 +23,68 @@ export class EnemyGenerator {
     }
 
 
-    private computeNewTime() : number {
+    private computeNewTime(index : number) : number {
 
-        const MIN_TIME = 60;
-        const MAX_TIME = 180;
+        const MIN_TIME = [90, 120];
+        const MAX_TIME = [180, 300];
 
-        return Math.round(Math.random() * (MAX_TIME - MIN_TIME) + MIN_TIME);
+        return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }
 
 
-    private generateEnemy() {
+    private createEnemyFromBelow() : Enemy {
 
         const OFFSET = 128;
+        const IDS = [0, 1];
 
-        let id = (Math.random() * getEnemyTypeCount()) | 0;
+        let id = IDS[(Math.random() * IDS.length) | 0];
         let enemyType = getEnemyType(id);
 
         let x = (Math.random() * (GAME_REGION_WIDTH - OFFSET*2)) + OFFSET;
         let y = GAME_REGION_HEIGHT + OFFSET;
         let dir = Math.random() < 0.5 ? 1 : -1;
 
-        let enemy = <Enemy>(new enemyType.prototype.constructor(x, y, dir));
+        return <Enemy>(new enemyType.prototype.constructor(x, y, dir));
+    }
+
+
+    private createEnemyFromSides() : Enemy {
+
+        const OFFSET = 128;
+        const IDS = [2, 3];
+
+        let dir = Math.random() < 0.5 ? 1 : -1;
+
+        let id = IDS[(Math.random() * IDS.length) | 0];
+        let enemyType = getEnemyType(id);
+
+        let y = (Math.random() * (GAME_REGION_HEIGHT - OFFSET*2)) + OFFSET;
+        let x = -OFFSET;
+        if (dir == -1)
+            x += GAME_REGION_WIDTH + 2 * OFFSET; 
+
+        return <Enemy>(new enemyType.prototype.constructor(x, y, dir));
+    }
+
+
+    private generateEnemy(timerIndex : number) {
+
+        let enemy = <Enemy> null;
+        switch (timerIndex) {
+
+        case 0:
+            enemy = this.createEnemyFromBelow();
+            break;
+
+        case 1:
+            enemy = this.createEnemyFromSides();
+            break;
+
+        default:
+            break;
+        }
+        if (enemy == null) return;
+
         this.enemies.push(enemy);
     }
 
@@ -54,8 +95,8 @@ export class EnemyGenerator {
 
             if ((this.timers[i] -= event.step) <= 0) {
 
-                this.generateEnemy();
-                this.timers[i] += this.computeNewTime();
+                this.generateEnemy(i);
+                this.timers[i] += this.computeNewTime(i);
             }
         }
     }

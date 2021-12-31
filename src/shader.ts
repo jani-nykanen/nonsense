@@ -16,6 +16,10 @@ export class Shader {
     private uniformFragmentScale : WebGLUniformLocation;
     private uniformFragmentColor : WebGLUniformLocation;
     private uniformTextureSampler : WebGLUniformLocation;
+    private uniformFilterSampler : WebGLUniformLocation;
+    private uniformFrameSize : WebGLUniformLocation;
+    private uniformFramePos : WebGLUniformLocation;
+    private uniformContrast : WebGLUniformLocation;
 
 
     constructor(gl : WebGLRenderingContext, vertexSource : string, fragmentSource : string) {
@@ -32,6 +36,10 @@ export class Shader {
         this.uniformFragmentScale = 0;
         this.uniformFragmentColor = 0;
         this.uniformTextureSampler = 0;
+        this.uniformFilterSampler = 0;
+        this.uniformFrameSize = 0;
+        this.uniformFramePos = 0;
+        this.uniformContrast = 0;
 
         this.getUniformLocations();
     }   
@@ -101,6 +109,10 @@ export class Shader {
         this.uniformFragmentScale = gl.getUniformLocation(this.shaderProgram, "texSize");
         this.uniformFragmentColor = gl.getUniformLocation(this.shaderProgram, "color");
         this.uniformTextureSampler = gl.getUniformLocation(this.shaderProgram, "texSampler");
+        this.uniformFilterSampler = gl.getUniformLocation(this.shaderProgram, "filterSampler");
+        this.uniformFrameSize = gl.getUniformLocation(this.shaderProgram, "frameSize");
+        this.uniformFramePos = gl.getUniformLocation(this.shaderProgram, "framePos");
+        this.uniformContrast = gl.getUniformLocation(this.shaderProgram, "contrast");
     }
 
 
@@ -112,6 +124,9 @@ export class Shader {
         this.getUniformLocations();
 
         gl.uniform1i(this.uniformTextureSampler, 0);
+        gl.uniform1i(this.uniformFilterSampler, 1);
+
+        gl.uniform1f(this.uniformContrast, 1.0);
 
         this.setVertexTransform(0, 0, 1, 1);
         this.setFragTransform(0, 0, 1, 1);
@@ -149,5 +164,17 @@ export class Shader {
     public setTransformMatrix(matrix : Matrix3) {
 
         matrix.passToShader(this.gl, this.uniformTransform);
+    }
+
+
+    public setFilter(frameX : number, frameY : number,
+        frameWidth : number, frameHeight : number, 
+        contrast : number) {
+
+        let gl = this.gl;
+
+        gl.uniform2f(this.uniformFramePos, frameX, frameY);
+        gl.uniform2f(this.uniformFrameSize, frameWidth, frameHeight);
+        gl.uniform1f(this.uniformContrast, contrast);
     }
 }

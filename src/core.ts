@@ -1,5 +1,6 @@
 import { AssetManager } from "./assets.js";
 import { AudioPlayer } from "./audioplayer.js";
+import { Bitmap } from "./bitmap.js";
 import { Canvas, ShaderType } from "./canvas.js";
 import { InputListener } from "./input.js";
 import { Mesh } from "./mesh.js";
@@ -46,6 +47,10 @@ export class CoreEvent {
 
         
     public disposeMesh = (mesh : Mesh) : void => this.canvas.destroyMesh(mesh); 
+
+
+    public toggleFilter = (filterTexture : Bitmap, contrast = 0.0) : void => 
+        this.canvas.toggleFilter(filterTexture, contrast); 
 }
 
 

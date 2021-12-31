@@ -84,7 +84,6 @@ export class Enemy extends GameObject {
 //
 
 
-
 class VerticalMushroom extends Enemy {
 
 
@@ -174,7 +173,112 @@ class JumpingFish extends Enemy {
 }
 
 
-const ENEMY_TYPES = [VerticalMushroom, JumpingFish];
+class HorizontalMushroom extends Enemy {
+
+
+    private wave : number;
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 2);
+
+        const FLY_SPEED = 2.0;
+
+        this.target.x = FLY_SPEED * this.dir;
+        this.speed.x = this.target.x;
+        this.friction.y = 0.40;
+
+        this.scale = new Vector2(0.67, 0.67);
+
+        this.wave = 0.0;
+
+        this.sprite.setFrame(0, 1);
+
+        this.flip = dir > 0 ? Flip.Horizontal : Flip.None;
+    }
+
+
+    protected updateAI(event: CoreEvent): void {
+        
+        const WAVE_SPEED = 0.10;
+        const SPEED_MOD = 4.0;
+        const ANIM_EPS = 0.33;
+
+        this.wave = (this.wave + WAVE_SPEED*event.step) % (Math.PI*2);
+        let s = Math.sin(this.wave);
+
+        this.target.y = -s * SPEED_MOD;
+
+        let frame = 0;
+        if (s > ANIM_EPS)
+            frame = 2;
+        else if (s < -ANIM_EPS)
+            frame = 1;
+
+        this.sprite.setFrame(frame, this.sprite.getRow());
+    }
+
+}
+
+
+class Fox extends Enemy {
+
+
+    private startPos : number;
+    private phase : number;
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 3);
+
+        this.startPos = x;
+        this.phase = 0;
+
+        this.friction.x = 0.15;
+
+        this.scale = new Vector2(0.80, 0.80 * 0.67);
+
+        this.sprite.setFrame(0, 2);
+
+        this.flip = dir > 0 ? Flip.Horizontal : Flip.None;
+    }
+
+
+    protected updateAI(event: CoreEvent): void {
+        
+        const ANIM_SPEED = 4;
+        const START_SPEED = 2.0;
+        const START_DISTANCE = 128;
+        const BASE_TARGET = 12.0;
+
+        if (this.phase == 0) {
+
+            this.target.x = START_SPEED * this.dir;
+            this.speed.x = this.target.x;
+
+            if (Math.abs(this.pos.x - this.startPos) > START_DISTANCE) {
+
+                ++ this.phase;
+                this.speed.x = 0;
+            }
+        }
+        else {
+
+            this.target.x = BASE_TARGET * this.dir;
+        }
+        
+        this.sprite.animate(this.sprite.getRow(), 0, 3, ANIM_SPEED, event.step);
+    }
+
+}
+
+
+const ENEMY_TYPES = [
+    VerticalMushroom, JumpingFish, 
+    HorizontalMushroom, Fox
+];
 
 
 export const getEnemyType = (id : number) : Function => 

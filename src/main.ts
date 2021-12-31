@@ -14,5 +14,5 @@ window.onload = () => (new Core(1024, 768))
     },
     event => {
 
-        // ...
+        event.toggleFilter(event.assets.getBitmap("paperFilter"), 0.0);
     });

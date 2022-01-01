@@ -139,14 +139,12 @@ class JumpingFish extends Enemy {
 
         super(x, y, dir, 1);
 
-        const JUMP_HEIGHT_MIN = -10.0;
+        const JUMP_HEIGHT_MIN = -12.0;
         const JUMP_HEIGHT_MAX = -16.0;
         const H_SPEED_MIN = 0.5;
         const H_SPEED_MAX = 5.0;
         const GRAVITY = 12.0;
 
-        this.target.y = VerticalMushroom.FLY_SPEED;
-        this.speed.y = this.target.y;
         this.friction.y = 0.167;
 
         this.scale = new Vector2(0.60, 0.60);
@@ -275,9 +273,96 @@ class Fox extends Enemy {
 }
 
 
+// Pretty much the same as jumping fish, might need a 
+// base class for these two
+class Swordfish extends Enemy {
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 4);
+
+        const JUMP_HEIGHT_MIN = -8.0;
+        const JUMP_HEIGHT_MAX = -12.0;
+        const H_SPEED_MIN = 8.0;
+        const H_SPEED_MAX = 12.0;
+        const GRAVITY = 12.0;
+
+        this.friction.y = 0.167;
+
+        this.scale = new Vector2(0.80, 0.80 * 0.67);
+        
+        this.speed.x = ((Math.random() * (H_SPEED_MAX - H_SPEED_MIN)) + H_SPEED_MIN) * dir;
+        this.speed.y = ((Math.random() * (JUMP_HEIGHT_MAX - JUMP_HEIGHT_MIN)) + JUMP_HEIGHT_MIN) | 0;
+
+        this.target.x = this.speed.x;
+        this.target.y = GRAVITY;
+
+        this.sprite.setFrame(3, 1);
+
+        this.flip = dir > 0 ? Flip.None : Flip.Horizontal;
+    }
+
+
+    protected updateAI(event: CoreEvent): void {
+        
+        let s = new Vector2(this.speed.x * this.dir, this.speed.y);
+        let dir = Vector2.normalize(s, true);
+        this.angle = this.dir * Math.atan2(dir.y, dir.x);
+    }
+
+}
+
+
+class Orc extends Enemy {
+
+
+    private wave : number;
+    private startPos : number;
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 0);
+
+        const FLY_SPEED = -2.0;
+
+        this.startPos = x;
+
+        this.target.y = FLY_SPEED;
+        this.speed.y = this.target.y;
+
+        this.scale = new Vector2(0.67, 0.67);
+
+        this.wave = 0.0;
+
+        this.sprite.setFrame(0, 3);
+    }
+
+
+    protected updateAI(event: CoreEvent): void {
+        
+        const WAVE_SPEED = 0.025;
+        const AMPLITUDE = 128;
+        const ANIM_SPEED = 4;
+        const ROTATION = Math.PI / 8;
+
+        this.wave = (this.wave + WAVE_SPEED*event.step) % (Math.PI*2);
+
+        let s = Math.sin(this.wave);
+        this.pos.x = this.startPos + s * AMPLITUDE;
+        this.angle = ROTATION * s;
+
+        this.sprite.animate(3, 0, 3, ANIM_SPEED, event.step);
+    }
+
+}
+
+
 const ENEMY_TYPES = [
     VerticalMushroom, JumpingFish, 
-    HorizontalMushroom, Fox
+    HorizontalMushroom, Fox, 
+    Swordfish, Orc,
 ];
 
 

@@ -26,7 +26,7 @@ export class EnemyGenerator {
     private computeNewTime(index : number) : number {
 
         const MIN_TIME = [90, 120];
-        const MAX_TIME = [180, 300];
+        const MAX_TIME = [180, 240];
 
         return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }
@@ -35,7 +35,7 @@ export class EnemyGenerator {
     private createEnemyFromBelow() : Enemy {
 
         const OFFSET = 128;
-        const IDS = [0, 1];
+        const IDS = [0, 1, 5];
 
         let id = IDS[(Math.random() * IDS.length) | 0];
         let enemyType = getEnemyType(id);
@@ -51,7 +51,7 @@ export class EnemyGenerator {
     private createEnemyFromSides() : Enemy {
 
         const OFFSET = 128;
-        const IDS = [2, 3];
+        const IDS = [2, 3, 4];
 
         let dir = Math.random() < 0.5 ? 1 : -1;
 

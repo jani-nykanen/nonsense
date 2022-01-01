@@ -4,7 +4,7 @@ import { Enemy, getEnemyType, getEnemyTypeCount } from "./enemy.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
 
 
-const TIMER_COUNT = 2;
+const TIMER_COUNT = 3;
 
 
 export class EnemyGenerator {
@@ -25,8 +25,8 @@ export class EnemyGenerator {
 
     private computeNewTime(index : number) : number {
 
-        const MIN_TIME = [90, 120];
-        const MAX_TIME = [180, 240];
+        const MIN_TIME = [90, 120, 120];
+        const MAX_TIME = [180, 240, 240];
 
         return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }
@@ -67,6 +67,22 @@ export class EnemyGenerator {
     }
 
 
+    private createEnemyFromAbove() : Enemy {
+
+        const OFFSET = 128;
+        const IDS = [6, 7];
+
+        let id = IDS[(Math.random() * IDS.length) | 0];
+        let enemyType = getEnemyType(id);
+
+        let x = (Math.random() * (GAME_REGION_WIDTH - OFFSET*2)) + OFFSET;
+        let y = -OFFSET;
+        let dir = Math.random() < 0.5 ? 1 : -1;
+
+        return <Enemy>(new enemyType.prototype.constructor(x, y, dir));
+    }
+
+
     private generateEnemy(timerIndex : number) {
 
         let enemy = <Enemy> null;
@@ -78,6 +94,10 @@ export class EnemyGenerator {
 
         case 1:
             enemy = this.createEnemyFromSides();
+            break;
+
+        case 2:
+            enemy = this.createEnemyFromAbove();
             break;
 
         default:

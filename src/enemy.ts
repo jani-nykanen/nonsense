@@ -42,12 +42,14 @@ export class Enemy extends GameObject {
 
     protected preMovementEvent(event: CoreEvent): void {
         
+        const EPS = 0.0001;
+
         this.updateAI(event);
 
-        if ((this.speed.x < 0 && this.pos.x < -this.sprite.width/2) ||
-            (this.speed.x > 0 && this.pos.x > GAME_REGION_WIDTH  + this.sprite.width/2) ||
-            (this.speed.y < 0 && this.pos.y < -this.sprite.height/2) ||
-            (this.speed.y > 0 && this.pos.y > GAME_REGION_HEIGHT  + this.sprite.height/2)) {
+        if ((this.speed.x < -EPS && this.pos.x < -this.sprite.width/2) ||
+            (this.speed.x > EPS && this.pos.x > GAME_REGION_WIDTH  + this.sprite.width/2) ||
+            (this.speed.y < -EPS && this.pos.y < -this.sprite.height/2) ||
+            (this.speed.y > EPS && this.pos.y > GAME_REGION_HEIGHT  + this.sprite.height/2)) {
 
             this.kill(true);
         }
@@ -323,7 +325,7 @@ class Orc extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 0);
+        super(x, y, dir, 5);
 
         const FLY_SPEED = -2.0;
 
@@ -359,10 +361,117 @@ class Orc extends Enemy {
 }
 
 
+class Turnip extends Enemy {
+
+
+    private startPos : number;
+    private phase : number;
+    private wave : number;
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 6);
+
+        this.startPos = y;
+        this.phase = 0;
+
+        this.friction.y = 0.40;
+
+        this.scale = new Vector2(0.60, 0.60);
+
+        this.sprite.setFrame(0, 4);
+
+        this.wave = 0.0;
+    }
+
+
+    protected updateAI(event: CoreEvent): void {
+        
+        const ANIM_SPEED = 4;
+        const START_SPEED = 1.5;
+        const START_DISTANCE = 128;
+        const GRAVITY = 16.0;
+
+        const WAVE_SPEED = 0.10;
+        const ROTATION = Math.PI / 12;
+
+        this.wave = (this.wave + WAVE_SPEED*event.step) % (Math.PI*2);
+        this.angle = Math.sin(this.wave) * ROTATION;
+
+        if (this.phase == 0) {
+
+            this.target.y = START_SPEED;
+            this.speed.y = this.target.y;
+
+            if (Math.abs(this.pos.y - this.startPos) > START_DISTANCE) {
+
+                ++ this.phase;
+                this.speed.y = 0;
+            }
+        }
+        else {
+
+            this.target.y = GRAVITY;
+        }
+        
+        this.sprite.animate(
+            this.sprite.getRow(), 0, 3, ANIM_SPEED, event.step);
+    }
+
+}
+
+
+class LeafBug extends Enemy {
+
+
+    private wave : number;
+    private startPos : number;
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 7);
+
+        this.startPos = x;
+
+        this.friction.y = 0.50;
+
+        this.scale = new Vector2(0.67, 0.67);
+
+        this.sprite.setFrame(0, 5);
+
+        this.wave = 0.0;
+    }
+
+
+    protected updateAI(event: CoreEvent): void {
+        
+        const WAVE_SPEED = 0.025;
+        const AMPLITUDE = 256;
+        const ROTATION = Math.PI / 6;
+        const BASE_TARGET_Y = 4.0;
+        const SPEED_MOD = 3.0;
+
+        this.wave = (this.wave + WAVE_SPEED*event.step) % (Math.PI*2);
+
+        let s = Math.sin(this.wave);
+        this.pos.x = this.startPos + s * AMPLITUDE;
+        this.angle = -ROTATION * s;
+
+        this.target.y = BASE_TARGET_Y - Math.abs(s) * SPEED_MOD;
+    }
+
+}
+
+
+
+
 const ENEMY_TYPES = [
     VerticalMushroom, JumpingFish, 
     HorizontalMushroom, Fox, 
     Swordfish, Orc,
+    Turnip, LeafBug,
 ];
 
 

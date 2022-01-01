@@ -5,6 +5,7 @@
         {"name": "paperFilter", "path": "paper_filter.jpg"},
 
         {"name": "enemies", "path": "enemies.png"},
+        {"name": "background", "path": "background.png"},
 
         {"name": "font", "path": "font.png"}
     ],

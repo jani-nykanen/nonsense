@@ -30,7 +30,9 @@ export class GameScene implements Scene {
         const SHADOW_OFFSET_X = 8;
         const SHADOW_OFFSET_Y = 8;
 
-        // TODO: Use stencil buffer in future?
+        let bmp = canvas.assets.getBitmap("background");
+
+        canvas.drawBitmap(bmp, 0, 0);
 
         canvas.setColor(0, 0, 0);
         canvas.transform
@@ -41,30 +43,24 @@ export class GameScene implements Scene {
         this.enemyGen.draw(canvas);
 
         canvas.transform.pop();
+        canvas.transform.use();
 
-        canvas.changeShader(ShaderType.NoTexture);
-
-        canvas.setColor(0.33, 0.67, 1.0, 0.67);
-        canvas.fillRect();
-
-        canvas.changeShader(ShaderType.Textured);
+        canvas.setColor(1, 1, 1, 0.67);
+        canvas.drawBitmap(bmp, 0, 0);
         canvas.setColor();
+
+        canvas.resetVertexAndFragmentTransforms();
     }
 
 
     public redraw(canvas: Canvas) : void {
         
-        canvas.changeShader(ShaderType.NoTexture);
+        canvas.changeShader(ShaderType.Textured);
 
         canvas.transform
             .loadIdentity()
             .setView(canvas.width, canvas.height)
             .use();
-
-        canvas.setColor(0.33, 0.67, 1.0);
-        canvas.fillRect();
-
-        canvas.changeShader(ShaderType.Textured);
 
         this.drawShadowLayer(canvas);
         this.enemyGen.draw(canvas);

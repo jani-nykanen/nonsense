@@ -1,7 +1,7 @@
 import { Canvas, Flip } from "./canvas.js";
 import { CoreEvent } from "./core.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
-import { GameObject } from "./gameobject.js";
+import { GameObject, updateSpeedAxis } from "./gameobject.js";
 import { clamp } from "./math.js";
 import { Sprite } from "./sprite.js";
 import { Vector2 } from "./vector.js";
@@ -55,9 +55,13 @@ export class Enemy extends GameObject {
         }
     }
 
-    
+
+    public drawSpecial(canvas : Canvas) {}
+
 
     public draw(canvas : Canvas) {
+
+        if (!this.exist) return;
 
         let bmp = canvas.assets.getBitmap("enemies");
 
@@ -465,6 +469,83 @@ class LeafBug extends Enemy {
 }
 
 
+class Moon extends Enemy {
+
+
+    private angleTarget : number;
+
+
+    constructor(x : number, y : number, dir : number) {
+
+        super(x, y, dir, 8);
+
+        const JUMP_HEIGHT_MIN = 5.0;
+        const JUMP_HEIGHT_MAX = 9.0;
+        const H_SPEED_MIN = 0.5;
+        const H_SPEED_MAX = 3.0;
+        const GRAVITY = -8.0;
+
+        this.friction.y = 0.05;
+
+        this.scale = new Vector2(0.63, 0.63);
+        
+        this.speed.x = ((Math.random() * (H_SPEED_MAX - H_SPEED_MIN)) + H_SPEED_MIN) * dir;
+        this.speed.y = ((Math.random() * (JUMP_HEIGHT_MAX - JUMP_HEIGHT_MIN)) + JUMP_HEIGHT_MIN) | 0;
+
+        this.target.x = this.speed.x;
+        this.target.y = GRAVITY;
+
+        this.sprite.setFrame(1, 5);
+
+        this.flip = dir < 0 ? Flip.None : Flip.Horizontal;
+
+        this.angleTarget = 0;
+    }
+
+
+    protected updateAI(event: CoreEvent) : void {
+        
+        const ANGLE_SPEED = 0.005;
+        const ANGLE_TARGET = Math.PI / 4;
+
+        this.angleTarget = Math.sign(this.speed.y) * ANGLE_TARGET * this.dir;
+        this.angle = updateSpeedAxis(this.angle, this.angleTarget, ANGLE_SPEED);
+
+        // let s = new Vector2(this.speed.x * this.dir, this.speed.y);
+        // let dir = Vector2.normalize(s, true);
+        // this.angle = this.dir * Math.atan2(dir.y, dir.x);
+    }
+
+
+    public drawSpecial(canvas: Canvas) : void {
+    
+        const VINE_OFFSET_X = 32;
+        const VINE_OFFSET_Y = -32;
+
+        if (!this.exist) return;
+
+        let bmp = canvas.assets.getBitmap("enemies");
+
+        let sx = 512 + (128-16);
+        let sy = 1280;
+
+        let dw = 32 * this.scale.x;
+        let dh = 256 * this.scale.y;
+
+        let py = 0;
+
+        let loopy = Math.ceil((this.pos.y+VINE_OFFSET_Y) / dh);
+
+        for (let y = 0; y < loopy; ++ y) {
+
+            py = this.pos.y + VINE_OFFSET_Y - y * dh;
+
+            canvas.drawBitmapRegion(bmp, sx, sy, 32, 256, 
+                this.pos.x - this.dir * VINE_OFFSET_X - 16, py-dh,
+                dw, dh);
+        }
+    }
+}
 
 
 const ENEMY_TYPES = [
@@ -472,6 +553,7 @@ const ENEMY_TYPES = [
     HorizontalMushroom, Fox, 
     Swordfish, Orc,
     Turnip, LeafBug,
+    Moon
 ];
 
 

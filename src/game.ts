@@ -7,21 +7,30 @@ export const GAME_REGION_WIDTH = 1024;
 export const GAME_REGION_HEIGHT = 768;
 
 
+const INITIAL_TIME = 60;
+
+
 export class GameScene implements Scene {
 
 
     private enemyGen : EnemyGenerator;
 
+    private timer : number;
+
 
     constructor(param : any, event : CoreEvent) {
 
         this.enemyGen = new EnemyGenerator();
+
+        this.timer = INITIAL_TIME * 60;
     }
 
 
     public update(event: CoreEvent) : void {
         
         this.enemyGen.update(event);
+
+        this.timer = Math.max(-60, this.timer - event.step);
     }
 
 
@@ -29,6 +38,7 @@ export class GameScene implements Scene {
 
         const SHADOW_OFFSET_X = 8;
         const SHADOW_OFFSET_Y = 8;
+        const ALPHA = 0.25;
 
         let bmp = canvas.assets.getBitmap("background");
 
@@ -45,7 +55,7 @@ export class GameScene implements Scene {
         canvas.transform.pop();
         canvas.transform.use();
 
-        canvas.setColor(1, 1, 1, 0.67);
+        canvas.setColor(1, 1, 1, 1.0 - ALPHA);
         canvas.drawBitmap(bmp, 0, 0);
         canvas.setColor();
 
@@ -53,8 +63,29 @@ export class GameScene implements Scene {
     }
 
 
+    private drawHUD(canvas : Canvas, alpha = 1.0) {
+
+        const Y_OFF = 16;
+        const MAX_SCALE = 0.5;
+
+        let str = String(Math.max(0, Math.ceil(this.timer / 60)));
+        
+        let scaleFactor = ((this.timer+60) % 60) / 60.0;
+        let scale = 1.0 + MAX_SCALE * scaleFactor;
+
+        canvas.setColor(1, 1, 1, alpha);
+        canvas.drawText(canvas.assets.getBitmap("font"),
+            str, canvas.width/2, Y_OFF - (scale-1)*32, -26, 0, TextAlign.Center,
+            scale, scale);
+
+        canvas.setColor();
+    }
+
+
     public redraw(canvas: Canvas) : void {
         
+        const OVERDRAW_ALPHA = 0.50;
+
         canvas.changeShader(ShaderType.Textured);
 
         canvas.transform
@@ -63,6 +94,9 @@ export class GameScene implements Scene {
             .use();
 
         this.drawShadowLayer(canvas);
+
+        this.drawHUD(canvas);
+
         this.enemyGen.draw(canvas);
 
         canvas.transform
@@ -70,8 +104,8 @@ export class GameScene implements Scene {
             .use();
 
         canvas.setColor();
-        canvas.drawText(canvas.assets.getBitmap("font"),
-            "Hello world!", 2, 2, -26, 0, TextAlign.Left);
+        
+        this.drawHUD(canvas, OVERDRAW_ALPHA);
     }
 
 

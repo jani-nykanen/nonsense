@@ -2,9 +2,10 @@ import { Canvas } from "./canvas.js";
 import { CoreEvent } from "./core.js";
 import { Enemy, getEnemyType, getEnemyTypeCount } from "./enemy.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
+import { clamp } from "./math.js";
 
 
-const TIMER_COUNT = 3;
+const TIMER_COUNT = 6;
 
 
 export class EnemyGenerator {
@@ -17,16 +18,31 @@ export class EnemyGenerator {
     constructor() {
 
         this.enemies = new Array<Enemy> ();
-        this.timers = (new Array<number> (TIMER_COUNT))
-            .fill(0)
-            .map(_ => 0); // ) this.computeNewTime());
+        this.timers = new Array<number> (TIMER_COUNT);
+
+        this.computeInitialTimes();
+    }
+
+
+    private computeInitialTimes() {
+
+        const EXTRA_TIME = [15*60, 30*60, 45*60];
+
+        for (let i = 0; i < this.timers.length; ++ i) {
+
+            this.timers[i] = 0; // this.computeNewTime(i % 3);
+            if (i >= 3) {
+
+                this.timers[i] += EXTRA_TIME[clamp(i-3, 0, 2) | 0];
+            }
+        }
     }
 
 
     private computeNewTime(index : number) : number {
 
-        const MIN_TIME = [90, 120, 120];
-        const MAX_TIME = [180, 240, 240];
+        const MIN_TIME = [90, 120, 120, 150, 180, 180];
+        const MAX_TIME = [180, 240, 240, 270, 360, 360];
 
         return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }
@@ -70,7 +86,7 @@ export class EnemyGenerator {
     private createEnemyFromAbove() : Enemy {
 
         const OFFSET = 128;
-        const IDS = [6, 7];
+        const IDS = [6, 7, 8];
 
         let id = IDS[(Math.random() * IDS.length) | 0];
         let enemyType = getEnemyType(id);
@@ -86,7 +102,8 @@ export class EnemyGenerator {
     private generateEnemy(timerIndex : number) {
 
         let enemy = <Enemy> null;
-        switch (timerIndex) {
+
+        switch (timerIndex % 3) {
 
         case 0:
             enemy = this.createEnemyFromBelow();
@@ -140,6 +157,12 @@ export class EnemyGenerator {
 
 
     public draw(canvas : Canvas) {
+
+        // Draws vines etc.
+        for (let o of this.enemies) {
+
+            o.drawSpecial(canvas);
+        }
 
         for (let o of this.enemies) {
 

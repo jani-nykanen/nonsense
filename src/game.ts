@@ -2,6 +2,8 @@ import { Canvas, ShaderType, TextAlign } from "./canvas.js";
 import { CoreEvent, Scene } from "./core.js";
 import { EnemyGenerator } from "./enemygen.js";
 import { Player } from "./player.js";
+import { TransitionEffectType } from "./transition.js";
+import { RGBA } from "./vector.js";
 
 
 export const GAME_REGION_WIDTH = 1024;
@@ -26,11 +28,16 @@ export class GameScene implements Scene {
         this.player = new Player(GAME_REGION_WIDTH/2, 128);
 
         this.timer = INITIAL_TIME * 60;
+
+        event.transition.activate(false, TransitionEffectType.Fade,
+            1.0/30.0, null, new RGBA(0.33, 0.67, 1.0));
     }
 
 
     public update(event: CoreEvent) : void {
         
+        if (event.transition.isActive()) return;
+
         this.enemyGen.update(event);
         if (this.enemyGen.playerCollision(this.player, event)) {
 

@@ -26,7 +26,7 @@ export class EnemyGenerator {
         this.enemies.push(
             <Enemy>(new (getEnemyType(0)).prototype.constructor(
                 GAME_REGION_WIDTH/2, 
-                GAME_REGION_HEIGHT+128, 
+                GAME_REGION_HEIGHT-128, 
                 1))
         )
     }
@@ -45,8 +45,8 @@ export class EnemyGenerator {
 
     private computeNewTime(index : number) : number {
 
-        const MIN_TIME = [180, 240, 240, 240, 300, 300];
-        const MAX_TIME = [360, 480, 480, 480, 600, 600];
+        const MIN_TIME = [120, 150, 150, 180, 210, 210];
+        const MAX_TIME = [240, 300, 300, 360, 480, 480];
 
         return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }

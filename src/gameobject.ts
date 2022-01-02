@@ -200,4 +200,8 @@ export class GameObject extends WeakGameObject {
     public preDraw(canvas : Canvas) {}
     public draw(canvas : Canvas) {}
 
+
+    public getHitbox = () : Vector2 => this.hitbox.clone();
+    public getSpeed = () : Vector2 => this.speed.clone();
+
 }

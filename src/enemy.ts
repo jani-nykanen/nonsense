@@ -3,6 +3,7 @@ import { CoreEvent } from "./core.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
 import { GameObject, updateSpeedAxis } from "./gameobject.js";
 import { clamp } from "./math.js";
+import { Player } from "./player.js";
 import { Sprite } from "./sprite.js";
 import { Vector2 } from "./vector.js";
 
@@ -17,8 +18,11 @@ export class Enemy extends GameObject {
     protected flip : Flip;
     protected dir : number;
 
+    protected cannotBeKilled : boolean;
 
-    constructor(x : number, y : number, dir : number, id : number) {
+
+    constructor(x : number, y : number, dir : number, 
+        id : number, cannotBeKilled = false) {
 
         super(x, y, true);
 
@@ -33,6 +37,10 @@ export class Enemy extends GameObject {
         this.dir = dir;
 
         this.id = id;
+
+        this.hitbox = new Vector2(128, 128);
+
+        this.cannotBeKilled = cannotBeKilled;
     }
 
 
@@ -82,6 +90,47 @@ export class Enemy extends GameObject {
 
         canvas.transform.pop();
     }
+
+
+    public playerCollision(player : Player, event : CoreEvent) : boolean {
+
+        const STOMP_OFFSET = 16;
+        const STOMP_HEIGHT = 32;
+        const SPEED_EPS = 0.5;
+        const KNOCKBACK_Y = 8.0;
+
+        if (player.isDying() || this.isDying() || !this.exist)
+            return;
+
+        let left = this.pos.x - this.hitbox.x/2;
+        let top = this.pos.y - this.hitbox.y/2 - STOMP_OFFSET; 
+
+        let p = player.getPosition();
+        let phit = player.getHitbox();
+
+        let px = p.x - phit.x/2;
+        let py = p.y + phit.y/2;
+
+        if (player.getSpeed().y > -SPEED_EPS &&
+            px + phit.x >= left && px <= left + this.hitbox.x &&
+            py >= top && py <= top+STOMP_HEIGHT) {
+
+            player.bounce(event);
+
+            if (!this.cannotBeKilled) {
+
+                // Kill
+                this.kill();
+            }
+            else {
+
+                this.speed.y = KNOCKBACK_Y;
+            }
+            return false;
+        }
+
+        return this.overlayObject(player);
+    }
 }
 
 
@@ -101,7 +150,7 @@ class VerticalMushroom extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 0);
+        super(x, y, dir, 0, true);
 
         this.target.y = VerticalMushroom.FLY_SPEED;
         this.speed.y = this.target.y;
@@ -185,7 +234,7 @@ class HorizontalMushroom extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 2);
+        super(x, y, dir, 2, true);
 
         const FLY_SPEED = 2.0;
 

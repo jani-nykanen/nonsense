@@ -10,7 +10,8 @@ window.onload = () => (new Core(1024, 768))
             .addAction("fire1", "KeyZ", null, 0)
             .addAction("fire2", "KeyX", null, 1)
             .addAction("select", "Space", null, 0)
-            .addAction("start", "Enter", null, 9, 7);
+            .addAction("start", "Enter", null, 9, 7)
+            .addAction("jump", "ArrowUp", null, 0);
     },
     event => {
 

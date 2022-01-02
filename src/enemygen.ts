@@ -1,8 +1,8 @@
 import { Canvas } from "./canvas.js";
 import { CoreEvent } from "./core.js";
-import { Enemy, getEnemyType, getEnemyTypeCount } from "./enemy.js";
+import { Enemy, getEnemyType } from "./enemy.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
-import { clamp } from "./math.js";
+import { Player } from "./player.js";
 
 
 const TIMER_COUNT = 6;
@@ -21,28 +21,32 @@ export class EnemyGenerator {
         this.timers = new Array<number> (TIMER_COUNT);
 
         this.computeInitialTimes();
+
+        // Create the initial enemy
+        this.enemies.push(
+            <Enemy>(new (getEnemyType(0)).prototype.constructor(
+                GAME_REGION_WIDTH/2, 
+                GAME_REGION_HEIGHT+128, 
+                1))
+        )
     }
 
 
     private computeInitialTimes() {
 
-        const EXTRA_TIME = [15*60, 30*60, 45*60];
+        const INITIAL_TIMES = [180, 180, 240, 15*60, 30*60, 45*60];
 
         for (let i = 0; i < this.timers.length; ++ i) {
 
-            this.timers[i] = 0; // this.computeNewTime(i % 3);
-            if (i >= 3) {
-
-                this.timers[i] += EXTRA_TIME[clamp(i-3, 0, 2) | 0];
-            }
+            this.timers[i] = INITIAL_TIMES[i];
         }
     }
 
 
     private computeNewTime(index : number) : number {
 
-        const MIN_TIME = [90, 120, 120, 150, 180, 180];
-        const MAX_TIME = [180, 240, 240, 270, 360, 360];
+        const MIN_TIME = [180, 240, 240, 240, 300, 300];
+        const MAX_TIME = [360, 480, 480, 480, 600, 600];
 
         return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }
@@ -170,4 +174,16 @@ export class EnemyGenerator {
         }
     }
 
+
+    public playerCollision(player : Player, event : CoreEvent) : boolean {
+
+        for (let e of this.enemies) {
+
+            if (e.playerCollision(player, event)) {
+
+                return true;
+            }
+        }
+        return false;
+    }
 } 

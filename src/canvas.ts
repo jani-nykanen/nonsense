@@ -334,7 +334,7 @@ export class Canvas {
 
 
     public drawSprite(spr : Sprite, bmp : Bitmap, 
-        dx : number, dy : number, dw = this.width, dh = this.height,
+        dx : number, dy : number, dw = spr.width, dh = spr.height,
         flip = Flip.None) {
 
         spr.draw(this, bmp, dx, dy, dw, dh, flip);
@@ -343,7 +343,7 @@ export class Canvas {
 
     public drawSpriteFrame(spr : Sprite, bmp : Bitmap, 
         column : number, row : number, 
-        dx : number, dy : number, dw = this.width, dh = this.height,
+        dx : number, dy : number, dw = spr.width, dh = spr.height,
         flip = Flip.None) {
 
         spr.drawFrame(this, bmp, column, row, dx, dy, dw, dh, flip);

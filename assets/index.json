@@ -6,6 +6,7 @@
 
         {"name": "enemies", "path": "enemies.png"},
         {"name": "background", "path": "background.png"},
+        {"name": "player", "path": "player.png"},
 
         {"name": "font", "path": "font.png"}
     ],

@@ -1,6 +1,7 @@
 import { Canvas, ShaderType, TextAlign } from "./canvas.js";
 import { CoreEvent, Scene } from "./core.js";
 import { EnemyGenerator } from "./enemygen.js";
+import { Player } from "./player.js";
 
 
 export const GAME_REGION_WIDTH = 1024;
@@ -14,6 +15,7 @@ export class GameScene implements Scene {
 
 
     private enemyGen : EnemyGenerator;
+    private player : Player;
 
     private timer : number;
 
@@ -21,6 +23,7 @@ export class GameScene implements Scene {
     constructor(param : any, event : CoreEvent) {
 
         this.enemyGen = new EnemyGenerator();
+        this.player = new Player(GAME_REGION_WIDTH/2, 128);
 
         this.timer = INITIAL_TIME * 60;
     }
@@ -29,6 +32,12 @@ export class GameScene implements Scene {
     public update(event: CoreEvent) : void {
         
         this.enemyGen.update(event);
+        if (this.enemyGen.playerCollision(this.player, event)) {
+
+            // Game over!
+        }
+
+        this.player.update(event);
 
         this.timer = Math.max(-60, this.timer - event.step);
     }
@@ -51,6 +60,7 @@ export class GameScene implements Scene {
             .use();
 
         this.enemyGen.draw(canvas);
+        this.player.draw(canvas);
 
         canvas.transform.pop();
         canvas.transform.use();
@@ -98,6 +108,7 @@ export class GameScene implements Scene {
         this.drawHUD(canvas);
 
         this.enemyGen.draw(canvas);
+        this.player.draw(canvas);
 
         canvas.transform
             .loadIdentity()

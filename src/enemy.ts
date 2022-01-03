@@ -24,6 +24,8 @@ export class Enemy extends GameObject {
     protected cannotBeKilled : boolean;
     private bounceTimer : number;
 
+    protected harmful : boolean;
+
 
     constructor(x : number, y : number, dir : number,
         scalex : number, scaley : number, 
@@ -47,6 +49,8 @@ export class Enemy extends GameObject {
 
         this.cannotBeKilled = cannotBeKilled;
         this.bounceTimer = 0.0;
+
+        this.harmful = true;
     }
 
 
@@ -140,12 +144,13 @@ export class Enemy extends GameObject {
 
     private playerCollisionBase(player : Player, tx : number, ty : number, event : CoreEvent) : boolean {
 
-        const STOMP_OFFSET = 16;
-        const STOMP_HEIGHT = 32;
-        const SPEED_EPS = 0.5;
+        const STOMP_OFFSET = 32;
+        const STOMP_HEIGHT = 48;
+        const SPEED_EPS = 1.5;
         const KNOCKBACK_Y = 8.0;
+        const STOMP_WIDTH_OFFSET = 16;
 
-        let left = this.pos.x - this.hitbox.x/2;
+        let left = this.pos.x - this.hitbox.x/2 - STOMP_WIDTH_OFFSET;
         let top = this.pos.y - this.hitbox.y/2 - STOMP_OFFSET; 
 
         let p = Vector2.add(player.getPosition(), new Vector2(tx, ty));
@@ -155,7 +160,8 @@ export class Enemy extends GameObject {
         let py = p.y + phit.y/2;
 
         if (player.getSpeed().y > -SPEED_EPS &&
-            px + phit.x >= left && px <= left + this.hitbox.x &&
+            px + phit.x >= left && 
+            px <= left + this.hitbox.x + STOMP_WIDTH_OFFSET*2 &&
             py >= top && py <= top + STOMP_HEIGHT + Math.max(0, player.getSpeed().y)) {
 
             player.bounce(event);
@@ -173,28 +179,51 @@ export class Enemy extends GameObject {
             }
             return false;
         }
-        return this.overlayObject(player, new Vector2(tx, ty));
+        
+        if (this.harmful &&
+            this.overlayObject(player, new Vector2(tx, ty))) {
+
+            player.hurt();
+            return true;
+        }
+        return false;
     }
 
 
     public playerCollision(player : Player, event : CoreEvent) : boolean {
 
+        const EPS = 1;
+
         if (player.isDying() || this.isDying() || !this.exist)
             return;
 
-        for (let y = -1; y <= 1; ++ y) {
+        let hbox = player.getHitbox();
+        let p = player.getPosition();
 
-            for (let x = -1; x <= 1; ++ x) {
+        let startx = p.x + hbox.x/2 >= GAME_REGION_WIDTH-EPS ? -1 : 0;
+        let endx = p.x - hbox.x/2 <= EPS ? 1 : 0;
+        let starty = p.y + hbox.y/2 >= GAME_REGION_HEIGHT-EPS ? -1 : 0;
+        let endy = p.y - hbox.y/2 <= EPS ? 1 : 0;
+
+        for (let y = starty; y <= endy; ++ y) {
+
+            for (let x = startx; x <= endx; ++ x) {
 
                 //if (Math.abs(x) == Math.abs(y) && x != 0)
                 //    continue;
 
+                this.playerCollisionBase(player, 
+                    x * GAME_REGION_WIDTH, 
+                    y * GAME_REGION_HEIGHT, event);
+
+                /*
                 if (this.playerCollisionBase(player, 
                         x * GAME_REGION_WIDTH, 
                         y * GAME_REGION_HEIGHT, event)) {
 
                     return true;
                 }
+                */
             }
         }
         return false;
@@ -227,6 +256,8 @@ class VerticalMushroom extends Enemy {
         this.wave = 0.0;
 
         this.sprite.setFrame(0, 0);
+
+        this.hitbox = new Vector2(80, 64);
     }
 
 
@@ -277,6 +308,8 @@ class JumpingFish extends Enemy {
         this.sprite.setFrame(3, 0);
 
         this.flip = dir > 0 ? Flip.None : Flip.Horizontal;
+
+        this.hitbox = new Vector2(80, 64);
     }
 
 
@@ -311,6 +344,8 @@ class HorizontalMushroom extends Enemy {
         this.sprite.setFrame(0, 1);
 
         this.flip = dir > 0 ? Flip.Horizontal : Flip.None;
+
+        this.hitbox = new Vector2(80, 64);
     }
 
 
@@ -356,6 +391,8 @@ class Fox extends Enemy {
         this.sprite.setFrame(0, 2);
 
         this.flip = dir > 0 ? Flip.Horizontal : Flip.None;
+
+        this.hitbox = new Vector2(96, 56);
     }
 
 
@@ -365,6 +402,8 @@ class Fox extends Enemy {
         const START_SPEED = 2.0;
         const START_DISTANCE = 128;
         const BASE_TARGET = 12.0;
+
+        this.harmful = this.phase == 1;
 
         if (this.phase == 0) {
 
@@ -414,6 +453,8 @@ class Swordfish extends Enemy {
         this.sprite.setFrame(3, 1);
 
         this.flip = dir > 0 ? Flip.None : Flip.Horizontal;
+
+        this.hitbox = new Vector2(80, 48);
     }
 
 
@@ -448,6 +489,8 @@ class Orc extends Enemy {
         this.wave = 0.0;
 
         this.sprite.setFrame(0, 3);
+
+        this.hitbox = new Vector2(80, 48);
     }
 
 
@@ -490,6 +533,8 @@ class Turnip extends Enemy {
         this.sprite.setFrame(0, 4);
 
         this.wave = 0.0;
+
+        this.hitbox = new Vector2(64, 64);
     }
 
 
@@ -502,6 +547,8 @@ class Turnip extends Enemy {
 
         const WAVE_SPEED = 0.10;
         const ROTATION = Math.PI / 12;
+
+        this.harmful = this.phase == 1;
 
         this.wave = (this.wave + WAVE_SPEED*event.step) % (Math.PI*2);
         this.angle = Math.sin(this.wave) * ROTATION;
@@ -547,6 +594,8 @@ class LeafBug extends Enemy {
         this.sprite.setFrame(0, 5);
 
         this.wave = 0.0;
+
+        this.hitbox = new Vector2(80, 64);
     }
 
 
@@ -599,6 +648,8 @@ class Moon extends Enemy {
         this.flip = dir < 0 ? Flip.None : Flip.Horizontal;
 
         this.angleTarget = 0;
+
+        this.hitbox = new Vector2(80, 64);
     }
 
 

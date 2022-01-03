@@ -24,7 +24,6 @@ class AfterImage extends ExistingObject {
 
     private flip : Flip;
 
-
     constructor() {
 
         super(false);
@@ -128,6 +127,10 @@ export class Player extends GameObject {
     private afterimageTimer : number;
 
 
+    // TEMP
+    private hurtTimer : number;
+
+
     constructor(x : number, y : number) {
 
         super(x, y, true);
@@ -139,7 +142,7 @@ export class Player extends GameObject {
         this.scale = new Vector2(0.50, 0.50);
 
         this.friction = new Vector2(0.50, 0.30);
-        this.hitbox = new Vector2(this.scale.x * 128, this.scale.y * 176);
+        this.hitbox = new Vector2(this.scale.x * 128, this.scale.y * 128);
 
         this.jumpTimer = 0;
         this.bonusJumpTimer = 0;
@@ -153,6 +156,8 @@ export class Player extends GameObject {
 
         this.afterimages = new Array<AfterImage> ();
         this.afterimageTimer = 0;
+
+        this.hurtTimer = 0;
     }
 
 
@@ -306,6 +311,12 @@ export class Player extends GameObject {
                 }
             }
         }
+
+
+        if (this.hurtTimer > 0) {
+
+            this.hurtTimer -= event.step;
+        }
     }
 
 
@@ -369,9 +380,23 @@ export class Player extends GameObject {
 
     public draw(canvas : Canvas) {
     
-        for (let x = -1; x <= 1; ++ x) {
+        const EPS = 1;
 
-            for (let y = -1; y <= 1; ++ y) {
+        if (this.hurtTimer > 0 &&
+            Math.floor(this.hurtTimer / 2) % 2 == 0)
+            return;
+
+        let hbox = this.hitbox;
+        let p = this.pos;
+
+        let startx = p.x + hbox.x/2 >= GAME_REGION_WIDTH-EPS ? -1 : 0;
+        let endx = p.x - hbox.x/2 <= EPS ? 1 : 0;
+        let starty = p.y + hbox.y/2 >= GAME_REGION_HEIGHT-EPS ? -1 : 0;
+        let endy = p.y - hbox.y/2 <= EPS ? 1 : 0;
+
+        for (let y = starty; y <= endy; ++ y) {
+
+            for (let x = startx; x <= endx; ++ x) {
 
                 this.baseDraw(canvas, x * GAME_REGION_WIDTH, y * GAME_REGION_HEIGHT);
             }
@@ -411,5 +436,15 @@ export class Player extends GameObject {
 
         this.canFastFall = false;
         this.doubleJump = false;
+    }
+
+
+    public hurt() {
+
+        const HURT_TIME = 60;
+
+        if (this.hurtTimer > 0) return;
+        
+        this.hurtTimer = HURT_TIME;
     }
 }

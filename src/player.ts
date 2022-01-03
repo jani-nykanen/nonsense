@@ -1,13 +1,14 @@
 import { Canvas, Flip } from "./canvas.js";
 import { CoreEvent } from "./core.js";
-import { GAME_REGION_HEIGHT } from "./game.js";
+import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
 import { GameObject } from "./gameobject.js";
+import { clamp, negMod } from "./math.js";
 import { Sprite } from "./sprite.js";
 import { State } from "./types.js";
 import { Vector2 } from "./vector.js";
 
 
-const FAST_FALL_BONUS = 12;
+const FAST_FALL_BONUS = 20;
 
 
 export class Player extends GameObject {
@@ -18,13 +19,12 @@ export class Player extends GameObject {
     private angleTarget : number;
 
     private jumpTimer : number;
-    private bonusJumpActivated : boolean;
+    private bonusJumpTimer : number;
     private fastFall : boolean;
     private canFastFall : boolean;
     private fastFallBonus : boolean;
     private doubleJump : boolean;
     private fallingSlow : boolean;
-    private canFallSlow : boolean;
 
     private dir : number;
 
@@ -37,19 +37,18 @@ export class Player extends GameObject {
     
         this.angle = 0;
         this.angleTarget = 0;
-        this.scale = new Vector2(0.67, 0.67);
+        this.scale = new Vector2(0.50, 0.50);
 
-        this.friction = new Vector2(0.60, 0.40);
-        this.hitbox = new Vector2(this.scale.x * 96, this.scale.y * 160);
+        this.friction = new Vector2(0.50, 0.30);
+        this.hitbox = new Vector2(this.scale.x * 128, this.scale.y * 176);
 
         this.jumpTimer = 0;
-        this.bonusJumpActivated = true;
+        this.bonusJumpTimer = 0;
         this.fastFall = false;
         this.canFastFall = true;
         this.fastFallBonus = false;
         this.doubleJump = false;
         this.fallingSlow = false;
-        this.canFallSlow = true;
 
         this.dir = 0;
     }
@@ -57,11 +56,12 @@ export class Player extends GameObject {
 
     private control(event : CoreEvent) {
         
-        const BASE_GRAVITY = 12.0;
-        const MOVEMENT_SPEED = 6.0;
+        const BASE_GRAVITY = 8.0;
+        const MOVEMENT_SPEED = 5.0;
         const FAST_FALL_EPS = 0.5;
-        const FAST_FALL_SPEED = 24.0;
+        const FAST_FALL_SPEED = 16.0;
         const DOUBLE_JUMP_TIME = 60;
+        const DOUBLE_JUMP_MIN = 0.0;
         const FALL_SLOW_SPEED = 2.0;
 
         let stick = event.input.getStick();
@@ -69,19 +69,21 @@ export class Player extends GameObject {
         this.target.x = MOVEMENT_SPEED * stick.x;
         this.target.y = BASE_GRAVITY;
 
-        this.fastFall = this.canFastFall &&
+        this.fastFall = !(this.doubleJump && this.jumpTimer > 0) &&
+            !this.fallingSlow &&
+            this.canFastFall &&
             stick.y > FAST_FALL_EPS;
         if (this.fastFall) {
 
             this.speed.y = FAST_FALL_SPEED;
-            this.canFallSlow = false;
+            this.bonusJumpTimer = 0;
         }
         else {
 
             this.speed.y = Math.min(BASE_GRAVITY, this.speed.y);
         }
 
-        if (stick.y < FAST_FALL_EPS && !(this.doubleJump && this.jumpTimer > 0)) {
+        if (stick.y < FAST_FALL_EPS) {
 
             if (this.fastFallBonus) {
 
@@ -95,11 +97,13 @@ export class Player extends GameObject {
 
         if (!this.doubleJump) {
 
-            if (event.input.getAction("jump") == State.Pressed) {
+            if (this.bonusJumpTimer <= 0 &&
+                event.input.getAction("jump") == State.Pressed) {
                 
                 this.jumpTimer = DOUBLE_JUMP_TIME;
                 this.doubleJump = true;
-                this.canFallSlow = true;
+
+                this.speed.y = Math.max(this.speed.y, DOUBLE_JUMP_MIN);
             }
         }
         else if ((event.input.getAction("jump") & State.DownOrPressed) == 0) {
@@ -107,21 +111,21 @@ export class Player extends GameObject {
             this.jumpTimer = 0;
         }
 
-        this.fallingSlow = this.canFallSlow &&
-            this.doubleJump && !this.fastFall &&
+        this.fallingSlow = this.doubleJump && !this.fastFall &&
             this.jumpTimer <= 0 &&
             ((event.input.getAction("jump") & State.DownOrPressed) == 1);
         if (this.fallingSlow) {
 
-            this.speed.y = Math.min(this.speed.y, FALL_SLOW_SPEED);
+            this.target.y = FALL_SLOW_SPEED;
         }
+        
     }
 
 
     private animate(event : CoreEvent) {
 
         const EPS = 2.0;
-        const DOUBLE_JUMP_ANIM_SPEED = 2.0;
+        const DOUBLE_JUMP_ANIM_SPEED = 3.0;
 
         this.dir = 0;
         if (this.speed.x < -EPS)
@@ -158,10 +162,15 @@ export class Player extends GameObject {
 
     private updateTimers(event : CoreEvent) {
 
-        const JUMP_SPEED = -10.0;
-        const JUMP_TIME_BONUS = 12;
-        const DOUBLE_JUMP_MIN = -8.0;
-        const DOUBLE_JUMP_SPEED = -1.0;
+        const JUMP_SPEED = -8.0;
+        const JUMP_TIME_BONUS = 16;
+        const DOUBLE_JUMP_MAX = 8.0;
+        const DOUBLE_JUMP_SPEED = -0.75;
+
+        if (this.bonusJumpTimer > 0) {
+
+            this.bonusJumpTimer -= event.step;
+        }
 
         if (this.jumpTimer > 0) {
 
@@ -169,18 +178,18 @@ export class Player extends GameObject {
 
             if (this.doubleJump) {
 
-                this.speed.y = Math.max(DOUBLE_JUMP_MIN,
-                    this.speed.y + DOUBLE_JUMP_SPEED * event.step);
+                this.speed.y = clamp(this.speed.y + DOUBLE_JUMP_SPEED * event.step,
+                    JUMP_SPEED, DOUBLE_JUMP_MAX);
             }
             else {
 
                 this.speed.y = JUMP_SPEED;
 
-                if (!this.bonusJumpActivated &&
+                if (this.bonusJumpTimer > 0 &&
                     (event.input.getAction("jump") & State.DownOrPressed) == 1) {
 
                     this.jumpTimer += JUMP_TIME_BONUS;
-                    this.bonusJumpActivated = true;
+                    this.bonusJumpTimer = 0;
                 }
             }
         }
@@ -193,15 +202,12 @@ export class Player extends GameObject {
         this.animate(event);
         this.updateTimers(event);
 
-        // TEMP!!!
-        if (this.pos.y > GAME_REGION_HEIGHT + this.sprite.height/2*this.scale.y) {
-
-            this.pos.y -= GAME_REGION_HEIGHT + this.sprite.height*this.scale.y;
-        }
+        this.pos.x = negMod(this.pos.x, GAME_REGION_WIDTH);
+        this.pos.y = negMod(this.pos.y, GAME_REGION_HEIGHT);
     }
 
 
-    public draw(canvas : Canvas) {
+    private baseDraw(canvas : Canvas, tx : number, ty : number) {
     
         let flip = Flip.None;
         if (this.dir < 0)  
@@ -209,7 +215,7 @@ export class Player extends GameObject {
 
         canvas.transform
             .push()
-            .translate(this.pos.x, this.pos.y)
+            .translate(this.pos.x + tx, this.pos.y + ty)
             .rotate(this.angle)
             .scale(this.scale.x, this.scale.y)
             .use();
@@ -224,19 +230,32 @@ export class Player extends GameObject {
     }
 
 
+    public draw(canvas : Canvas) {
+    
+        for (let x = -1; x <= 1; ++ x) {
+
+            for (let y = -1; y <= 1; ++ y) {
+
+                this.baseDraw(canvas, x * GAME_REGION_WIDTH, y * GAME_REGION_HEIGHT);
+            }
+        }
+    }
+
+
     public bounce(event : CoreEvent) {
 
         const JUMP_TIME = 8;
+        const BONUS_JUMP_TIME = 8;
 
         this.jumpTimer = JUMP_TIME;
-        this.bonusJumpActivated = false;
+        this.bonusJumpTimer = BONUS_JUMP_TIME;
         
         if (this.fastFall) {
 
             this.jumpTimer += FAST_FALL_BONUS;
             this.fastFallBonus = true;
 
-            this.bonusJumpActivated = true;
+            this.bonusJumpTimer = 0;
         }
 
         this.canFastFall = false;

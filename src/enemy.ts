@@ -21,7 +21,8 @@ export class Enemy extends GameObject {
     protected cannotBeKilled : boolean;
 
 
-    constructor(x : number, y : number, dir : number, 
+    constructor(x : number, y : number, dir : number,
+        scalex : number, scaley : number, 
         id : number, cannotBeKilled = false) {
 
         super(x, y, true);
@@ -30,7 +31,7 @@ export class Enemy extends GameObject {
         this.sprite = new Sprite(256, 256);
         this.sprite.setFrame(0, id);
 
-        this.scale = new Vector2(1, 1);
+        this.scale = new Vector2(scalex, scaley);
         this.flip = Flip.None;
 
         this.angle = 0;
@@ -38,7 +39,7 @@ export class Enemy extends GameObject {
 
         this.id = id;
 
-        this.hitbox = new Vector2(128, 128);
+        this.hitbox = new Vector2(160*this.scale.x, 160*this.scale.y);
 
         this.cannotBeKilled = cannotBeKilled;
     }
@@ -113,7 +114,7 @@ export class Enemy extends GameObject {
 
         if (player.getSpeed().y > -SPEED_EPS &&
             px + phit.x >= left && px <= left + this.hitbox.x &&
-            py >= top && py <= top+STOMP_HEIGHT) {
+            py >= top && py <= top+STOMP_HEIGHT + player.getSpeed().y) {
 
             player.bounce(event);
 
@@ -150,13 +151,11 @@ class VerticalMushroom extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 0, true);
+        super(x, y, dir, 0.50, 0.50, 0, true);
 
         this.target.y = VerticalMushroom.FLY_SPEED;
         this.speed.y = this.target.y;
         this.friction.y = 0.40;
-
-        this.scale = new Vector2(0.67, 0.67);
 
         this.wave = 0.0;
 
@@ -192,7 +191,7 @@ class JumpingFish extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 1);
+        super(x, y, dir, 0.45, 0.45, 1);
 
         const JUMP_HEIGHT_MIN = -12.0;
         const JUMP_HEIGHT_MAX = -16.0;
@@ -202,8 +201,6 @@ class JumpingFish extends Enemy {
 
         this.friction.y = 0.167;
 
-        this.scale = new Vector2(0.60, 0.60);
-        
         this.speed.x = ((Math.random() * (H_SPEED_MAX - H_SPEED_MIN)) + H_SPEED_MIN) * dir;
         this.speed.y = ((Math.random() * (JUMP_HEIGHT_MAX - JUMP_HEIGHT_MIN)) + JUMP_HEIGHT_MIN) | 0;
 
@@ -234,15 +231,13 @@ class HorizontalMushroom extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 2, true);
+        super(x, y, dir, 0.50, 0.50, 2, true);
 
         const FLY_SPEED = 2.0;
 
         this.target.x = FLY_SPEED * this.dir;
         this.speed.x = this.target.x;
         this.friction.y = 0.40;
-
-        this.scale = new Vector2(0.67, 0.67);
 
         this.wave = 0.0;
 
@@ -284,14 +279,12 @@ class Fox extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 3);
+        super(x, y, dir, 0.67, 0.67*0.67, 3);
 
         this.startPos = x;
         this.phase = 0;
 
         this.friction.x = 0.15;
-
-        this.scale = new Vector2(0.80, 0.80 * 0.67);
 
         this.sprite.setFrame(0, 2);
 
@@ -335,18 +328,16 @@ class Swordfish extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 4);
+        super(x, y, dir, 0.60, 0.60*0.67, 4);
 
-        const JUMP_HEIGHT_MIN = -8.0;
-        const JUMP_HEIGHT_MAX = -12.0;
-        const H_SPEED_MIN = 8.0;
-        const H_SPEED_MAX = 12.0;
+        const JUMP_HEIGHT_MIN = -6.0;
+        const JUMP_HEIGHT_MAX = -10.0;
+        const H_SPEED_MIN = 6.0;
+        const H_SPEED_MAX = 10.0;
         const GRAVITY = 12.0;
 
-        this.friction.y = 0.167;
+        this.friction.y = 0.125;
 
-        this.scale = new Vector2(0.80, 0.80 * 0.67);
-        
         this.speed.x = ((Math.random() * (H_SPEED_MAX - H_SPEED_MIN)) + H_SPEED_MIN) * dir;
         this.speed.y = ((Math.random() * (JUMP_HEIGHT_MAX - JUMP_HEIGHT_MIN)) + JUMP_HEIGHT_MIN) | 0;
 
@@ -378,7 +369,7 @@ class Orc extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 5);
+        super(x, y, dir, 0.50, 0.50, 5);
 
         const FLY_SPEED = -2.0;
 
@@ -386,8 +377,6 @@ class Orc extends Enemy {
 
         this.target.y = FLY_SPEED;
         this.speed.y = this.target.y;
-
-        this.scale = new Vector2(0.67, 0.67);
 
         this.wave = 0.0;
 
@@ -424,14 +413,12 @@ class Turnip extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 6);
+        super(x, y, dir, 0.475, 0.475, 6);
 
         this.startPos = y;
         this.phase = 0;
 
-        this.friction.y = 0.40;
-
-        this.scale = new Vector2(0.60, 0.60);
+        this.friction.y = 0.33;
 
         this.sprite.setFrame(0, 4);
 
@@ -444,7 +431,7 @@ class Turnip extends Enemy {
         const ANIM_SPEED = 4;
         const START_SPEED = 1.5;
         const START_DISTANCE = 128;
-        const GRAVITY = 16.0;
+        const GRAVITY = 12.0;
 
         const WAVE_SPEED = 0.10;
         const ROTATION = Math.PI / 12;
@@ -484,13 +471,11 @@ class LeafBug extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 7);
+        super(x, y, dir, 0.50, 0.50, 7);
 
         this.startPos = x;
 
         this.friction.y = 0.50;
-
-        this.scale = new Vector2(0.67, 0.67);
 
         this.sprite.setFrame(0, 5);
 
@@ -526,18 +511,16 @@ class Moon extends Enemy {
 
     constructor(x : number, y : number, dir : number) {
 
-        super(x, y, dir, 8);
+        super(x, y, dir, 0.475, 0.475, 8);
 
         const JUMP_HEIGHT_MIN = 5.0;
-        const JUMP_HEIGHT_MAX = 9.0;
+        const JUMP_HEIGHT_MAX = 10.0;
         const H_SPEED_MIN = 0.5;
         const H_SPEED_MAX = 3.0;
         const GRAVITY = -8.0;
 
-        this.friction.y = 0.05;
+        this.friction.y = 0.033;
 
-        this.scale = new Vector2(0.63, 0.63);
-        
         this.speed.x = ((Math.random() * (H_SPEED_MAX - H_SPEED_MIN)) + H_SPEED_MIN) * dir;
         this.speed.y = ((Math.random() * (JUMP_HEIGHT_MAX - JUMP_HEIGHT_MIN)) + JUMP_HEIGHT_MIN) | 0;
 

@@ -229,6 +229,8 @@ export class Player extends GameObject {
         const EPS = 2.0;
         const DOUBLE_JUMP_ANIM_SPEED = 3.0;
 
+        let row : number;
+
         this.dir = 0;
         if (this.speed.x < -EPS)
             this.dir = -1;
@@ -238,9 +240,11 @@ export class Player extends GameObject {
         if ((this.doubleJump && this.jumpTimer > 0) ||
             this.fallingSlow) {
 
-            this.sprite.animate(
-                this.dir == 0 ? 2 : 3, 
-                0, 3, DOUBLE_JUMP_ANIM_SPEED, event.step);
+            row = (this.speed.y < -EPS) ? 4 : 2;
+            if (this.dir != 0)
+                ++ row;
+
+            this.sprite.animate(row, 0, 3, DOUBLE_JUMP_ANIM_SPEED, event.step);
             return;
         }
 
@@ -257,7 +261,7 @@ export class Player extends GameObject {
                 frame = 2;
         }
 
-        let row = this.dir == 0 ? 0 : 1;
+        row = this.dir == 0 ? 0 : 1;
         this.sprite.setFrame(frame, row);
     }
 
@@ -278,21 +282,27 @@ export class Player extends GameObject {
         if (this.jumpTimer > 0) {
 
             this.jumpTimer -= event.step;
+            if (this.jumpTimer <= 0) {
 
-            if (this.doubleJump) {
-
-                this.speed.y = clamp(this.speed.y + DOUBLE_JUMP_SPEED * event.step,
-                    DOUBLE_JUMP_MIN, DOUBLE_JUMP_MAX);
+                this.bonusJumpTimer = 0;
             }
             else {
 
-                this.speed.y = JUMP_SPEED;
+                if (this.doubleJump) {
 
-                if (this.bonusJumpTimer > 0 &&
-                    (event.input.getAction("jump") & State.DownOrPressed) == 1) {
+                    this.speed.y = clamp(this.speed.y + DOUBLE_JUMP_SPEED * event.step,
+                        DOUBLE_JUMP_MIN, DOUBLE_JUMP_MAX);
+                }
+                else {
 
-                    this.jumpTimer += JUMP_TIME_BONUS;
-                    this.bonusJumpTimer = 0;
+                    this.speed.y = JUMP_SPEED;
+
+                    if (this.bonusJumpTimer > 0 &&
+                        (event.input.getAction("jump") & State.DownOrPressed) == 1) {
+
+                        this.jumpTimer += JUMP_TIME_BONUS;
+                        this.bonusJumpTimer = 0;
+                    }
                 }
             }
         }

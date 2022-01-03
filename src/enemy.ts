@@ -8,6 +8,9 @@ import { Sprite } from "./sprite.js";
 import { Vector2 } from "./vector.js";
 
 
+const BOUNCE_TIME = 30;
+
+
 export class Enemy extends GameObject {
 
 
@@ -19,6 +22,7 @@ export class Enemy extends GameObject {
     protected dir : number;
 
     protected cannotBeKilled : boolean;
+    private bounceTimer : number;
 
 
     constructor(x : number, y : number, dir : number,
@@ -42,6 +46,7 @@ export class Enemy extends GameObject {
         this.hitbox = new Vector2(160*this.scale.x, 160*this.scale.y);
 
         this.cannotBeKilled = cannotBeKilled;
+        this.bounceTimer = 0.0;
     }
 
 
@@ -55,6 +60,11 @@ export class Enemy extends GameObject {
 
         this.updateAI(event);
 
+        if (this.bounceTimer > 0) {
+
+            this.bounceTimer -= event.step;
+        }
+
         if ((this.speed.x < -EPS && this.pos.x < -this.sprite.width/2) ||
             (this.speed.x > EPS && this.pos.x > GAME_REGION_WIDTH  + this.sprite.width/2) ||
             (this.speed.y < -EPS && this.pos.y < -this.sprite.height/2) ||
@@ -65,12 +75,47 @@ export class Enemy extends GameObject {
     }
 
 
+    protected die(event: CoreEvent) : boolean {
+
+        const ANIM_SPEED = 5;
+        const SCALE = 0.50;
+
+        this.scale.x = SCALE;
+        this.scale.y = SCALE;
+        this.angle = 0;
+
+        this.sprite.animate(6, 0, 4, ANIM_SPEED, event.step);
+
+        return this.sprite.getColumn() == 4;
+    }
+
+
     public drawSpecial(canvas : Canvas) {}
 
 
     public draw(canvas : Canvas) {
 
+        const SCALE_MOD = 0.33;
+
         if (!this.exist) return;
+
+        let bounceScaleX = 1;
+        let bounceScaleY = 1;
+        let t = this.bounceTimer / BOUNCE_TIME;
+
+        if (this.bounceTimer > 0) {
+
+            if (t >= 0.5) {
+
+                bounceScaleX = 1.0 + SCALE_MOD * Math.sin((t-0.5)*2 * Math.PI);
+                bounceScaleY = 1.0 - SCALE_MOD * Math.sin((t-0.5)*2 * Math.PI);
+            }
+            else {
+
+                bounceScaleX = 1.0 - SCALE_MOD * Math.sin(t*2 * Math.PI);
+                bounceScaleY = 1.0 + SCALE_MOD * Math.sin(t*2 * Math.PI);
+            }
+        }
 
         let bmp = canvas.assets.getBitmap("enemies");
 
@@ -78,7 +123,7 @@ export class Enemy extends GameObject {
             .push()
             .translate(this.pos.x, this.pos.y)
             .rotate(this.angle)
-            .scale(this.scale.x, this.scale.y)
+            .scale(this.scale.x * bounceScaleX, this.scale.y * bounceScaleY)
             .use();
 
         // canvas.setColor();
@@ -111,17 +156,19 @@ export class Enemy extends GameObject {
 
         if (player.getSpeed().y > -SPEED_EPS &&
             px + phit.x >= left && px <= left + this.hitbox.x &&
-            py >= top && py <= top+STOMP_HEIGHT + Math.max(0, player.getSpeed().y)) {
+            py >= top && py <= top + STOMP_HEIGHT + Math.max(0, player.getSpeed().y)) {
 
             player.bounce(event);
 
             if (!this.cannotBeKilled) {
 
-                // Kill
-                this.kill();
+                this.dying = true;
+                
+                this.sprite.setFrame(0, 6);
             }
             else {
 
+                this.bounceTimer = BOUNCE_TIME;
                 this.speed.y = KNOCKBACK_Y;
             }
             return false;
@@ -438,7 +485,7 @@ class Turnip extends Enemy {
         this.startPos = y;
         this.phase = 0;
 
-        this.friction.y = 0.33;
+        this.friction.y = 0.25;
 
         this.sprite.setFrame(0, 4);
 
@@ -451,7 +498,7 @@ class Turnip extends Enemy {
         const ANIM_SPEED = 4;
         const START_SPEED = 1.5;
         const START_DISTANCE = 128;
-        const GRAVITY = 12.0;
+        const GRAVITY = 8.0;
 
         const WAVE_SPEED = 0.10;
         const ROTATION = Math.PI / 12;
@@ -505,11 +552,11 @@ class LeafBug extends Enemy {
 
     protected updateAI(event: CoreEvent): void {
         
-        const WAVE_SPEED = 0.025;
-        const AMPLITUDE = 256;
+        const WAVE_SPEED = 0.020;
+        const AMPLITUDE = 192;
         const ROTATION = Math.PI / 6;
-        const BASE_TARGET_Y = 4.0;
-        const SPEED_MOD = 3.0;
+        const BASE_TARGET_Y = 3.0;
+        const SPEED_MOD = 2.0;
 
         this.wave = (this.wave + WAVE_SPEED*event.step) % (Math.PI*2);
 
@@ -574,7 +621,7 @@ class Moon extends Enemy {
         const VINE_OFFSET_X = 32;
         const VINE_OFFSET_Y = -32;
 
-        if (!this.exist) return;
+        if (!this.exist || this.dying) return;
 
         let bmp = canvas.assets.getBitmap("enemies");
 

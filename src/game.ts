@@ -1,7 +1,9 @@
 import { Canvas, ShaderType, TextAlign } from "./canvas.js";
 import { CoreEvent, Scene } from "./core.js";
 import { EnemyGenerator } from "./enemygen.js";
+import { nextObject } from "./gameobject.js";
 import { Player } from "./player.js";
+import { Star } from "./star.js";
 import { TransitionEffectType } from "./transition.js";
 import { RGBA } from "./vector.js";
 
@@ -13,11 +15,15 @@ export const GAME_REGION_HEIGHT = 768;
 const INITIAL_TIME = 60;
 
 
+export type StarGeneratingFunction = (x : number, y : number, speedx : number, speedy : number, time : number) => void;
+
+
 export class GameScene implements Scene {
 
 
     private enemyGen : EnemyGenerator;
     private player : Player;
+    private stars : Array<Star>;
 
     private timer : number;
 
@@ -25,12 +31,19 @@ export class GameScene implements Scene {
     constructor(param : any, event : CoreEvent) {
 
         this.enemyGen = new EnemyGenerator();
-        this.player = new Player(GAME_REGION_WIDTH/2, 128);
+        this.player = new Player(GAME_REGION_WIDTH/2, 128,
+            (x, y, sx, sy, time) => {
+
+                nextObject<Star>(this.stars, Star)
+                    .spawn(x, y, sx, sy, time);
+            });
 
         this.timer = INITIAL_TIME * 60;
 
         event.transition.activate(false, TransitionEffectType.Fade,
             1.0/30.0, null, new RGBA(0.33, 0.67, 1.0));
+
+        this.stars = new Array<Star> ();
     }
 
 
@@ -45,6 +58,11 @@ export class GameScene implements Scene {
         }
 
         this.player.update(event);
+
+        for (let o of this.stars) {
+
+            o.update(event);
+        }
 
         this.timer = Math.max(-60, this.timer - event.step);
     }
@@ -115,6 +133,12 @@ export class GameScene implements Scene {
         this.drawHUD(canvas);
 
         this.player.preDraw(canvas);
+
+        for (let o of this.stars) {
+
+            o.draw(canvas);
+        }
+
         this.enemyGen.draw(canvas);
         this.player.draw(canvas);
 

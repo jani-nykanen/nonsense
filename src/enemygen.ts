@@ -34,7 +34,7 @@ export class EnemyGenerator {
 
     private computeInitialTimes() {
 
-        const INITIAL_TIMES = [180, 180, 240, 15*60, 30*60, 45*60];
+        const INITIAL_TIMES = [60, 120, 240, 15*60, 30*60, 45*60];
 
         for (let i = 0; i < this.timers.length; ++ i) {
 

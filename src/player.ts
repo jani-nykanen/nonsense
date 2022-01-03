@@ -1,6 +1,6 @@
 import { Canvas, Flip, ShaderType } from "./canvas.js";
 import { CoreEvent } from "./core.js";
-import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
+import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH, StarGeneratingFunction } from "./game.js";
 import { ExistingObject, GameObject, nextObject } from "./gameobject.js";
 import { clamp, negMod } from "./math.js";
 import { Sprite } from "./sprite.js";
@@ -23,6 +23,7 @@ class AfterImage extends ExistingObject {
     private sprite : Sprite;
 
     private flip : Flip;
+
 
     constructor() {
 
@@ -126,12 +127,13 @@ export class Player extends GameObject {
     private afterimages : Array<AfterImage>;
     private afterimageTimer : number;
 
+    private starFunc : StarGeneratingFunction;
 
     // TEMP
     private hurtTimer : number;
 
 
-    constructor(x : number, y : number) {
+    constructor(x : number, y : number, starFunc : StarGeneratingFunction) {
 
         super(x, y, true);
 
@@ -158,6 +160,8 @@ export class Player extends GameObject {
         this.afterimageTimer = 0;
 
         this.hurtTimer = 0;
+
+        this.starFunc = starFunc;
     }
 
 
@@ -386,7 +390,7 @@ export class Player extends GameObject {
             Math.floor(this.hurtTimer / 2) % 2 == 0)
             return;
 
-        let hbox = this.hitbox;
+        let hbox = new Vector2(this.sprite.width * this.scale.x, this.sprite.height * this.scale.y);
         let p = this.pos;
 
         let startx = p.x + hbox.x/2 >= GAME_REGION_WIDTH-EPS ? -1 : 0;
@@ -418,6 +422,31 @@ export class Player extends GameObject {
     }
 
 
+    private spawnStars(x : number, y : number, count : number) {
+
+        const STAR_SPEED = 12.0;
+        const STAR_TIME = 16;
+
+        let angleStep = Math.PI*2 / count;
+        let angleStart = 0; // angleStep/2;
+        let angle : number;
+
+        let speed : Vector2;
+
+        for (let i = 0; i < count; ++ i) {
+
+            angle = angleStart + angleStep * i;
+
+            speed = new Vector2(
+                Math.cos(angle) * STAR_SPEED,
+                Math.sin(angle) * STAR_SPEED * 0.67);
+
+            this.starFunc(x, y, speed.x, speed.y, STAR_TIME);
+        }
+
+    }
+
+
     public bounce(event : CoreEvent) {
 
         const JUMP_TIME = 8;
@@ -436,7 +465,13 @@ export class Player extends GameObject {
 
         this.canFastFall = false;
         this.doubleJump = false;
+
+        this.spawnStars(
+            this.pos.x, 
+            this.pos.y + this.sprite.height/2 * this.scale.y,  
+            6);
     }
+
 
 
     public hurt() {

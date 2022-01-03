@@ -159,10 +159,11 @@ export class GameObject extends WeakGameObject {
     }
 
 
-    public overlayObject = (o : GameObject) : boolean =>
-        boxOverlay(this.pos, this.center, this.hitbox,
-            o.pos.x + o.center.x - o.hitbox.x/2,
-            o.pos.y + o.center.y - o.hitbox.y/2,
+    public overlayObject = (o : GameObject, translation = new Vector2()) : boolean =>
+        boxOverlay(
+            this.pos, this.center, this.hitbox,
+            o.pos.x + translation.x + o.center.x - o.hitbox.x/2,
+            o.pos.y + translation.y + o.center.y - o.hitbox.y/2,
             o.hitbox.x, o.hitbox.y);
 
 

@@ -1,7 +1,7 @@
-import { Canvas, Flip } from "./canvas.js";
+import { Canvas, Flip, ShaderType } from "./canvas.js";
 import { CoreEvent } from "./core.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH } from "./game.js";
-import { GameObject } from "./gameobject.js";
+import { ExistingObject, GameObject, nextObject } from "./gameobject.js";
 import { clamp, negMod } from "./math.js";
 import { Sprite } from "./sprite.js";
 import { State } from "./types.js";
@@ -9,6 +9,102 @@ import { Vector2 } from "./vector.js";
 
 
 const FAST_FALL_BONUS = 20;
+
+
+
+class AfterImage extends ExistingObject {
+
+
+    private pos : Vector2;
+    private scale : Vector2;
+
+    private timer : number;
+    private startTime : number;
+    private sprite : Sprite;
+
+    private flip : Flip;
+
+
+    constructor() {
+
+        super(false);
+
+        this.pos = new Vector2();
+        this.scale = new Vector2(1, 1);
+        this.sprite = new Sprite(256, 256);
+
+        this.timer = 0;
+        this.startTime = 1;
+
+        this.flip = Flip.None;
+    }
+
+
+    public spawn(pos : Vector2, scale : Vector2, time : number, 
+        flip : Flip, sprite : Sprite) {
+
+        this.pos = pos.clone();
+        this.scale = scale.clone();
+        this.startTime = time;
+        this.timer = time;
+        this.flip = flip;
+
+        this.exist = true;
+
+        this.sprite.setFrame(sprite.getColumn(), sprite.getRow());
+    }
+
+
+    public update(event : CoreEvent) {
+
+        if (!this.exist) return;
+
+        if ((this.timer -= event.step) <= 0) {
+
+            this.exist = false;
+        }
+    }
+
+
+    private baseDraw(canvas : Canvas, tx : number, ty : number) {
+    
+        canvas.transform
+            .push()
+            .translate(this.pos.x + tx, this.pos.y + ty)
+            .scale(this.scale.x, this.scale.y)
+            .use();
+
+        canvas.drawSprite(this.sprite, 
+            canvas.assets.getBitmap("player"),
+            -this.sprite.width/2,
+            -this.sprite.height/2,
+            this.sprite.width,
+            this.sprite.height, this.flip);
+
+        canvas.transform.pop();
+    }
+
+
+    public draw(canvas : Canvas) {
+
+        const BASE_ALPHA = 0.5;
+
+        let alpha = BASE_ALPHA * this.timer / this.startTime;
+
+        canvas.setColor(1.0, 1.0, 0.67, alpha);
+    
+        for (let x = -1; x <= 1; ++ x) {
+
+            for (let y = -1; y <= 1; ++ y) {
+
+                this.baseDraw(canvas, 
+                    x * GAME_REGION_WIDTH, 
+                    y * GAME_REGION_HEIGHT);
+            }
+        }
+    }
+}
+
 
 
 export class Player extends GameObject {
@@ -27,6 +123,9 @@ export class Player extends GameObject {
     private fallingSlow : boolean;
 
     private dir : number;
+
+    private afterimages : Array<AfterImage>;
+    private afterimageTimer : number;
 
 
     constructor(x : number, y : number) {
@@ -51,6 +150,9 @@ export class Player extends GameObject {
         this.fallingSlow = false;
 
         this.dir = 0;
+
+        this.afterimages = new Array<AfterImage> ();
+        this.afterimageTimer = 0;
     }
 
 
@@ -60,7 +162,7 @@ export class Player extends GameObject {
         const MOVEMENT_SPEED = 5.0;
         const FAST_FALL_EPS = 0.5;
         const FAST_FALL_SPEED = 16.0;
-        const DOUBLE_JUMP_TIME = 60;
+        const DOUBLE_JUMP_TIME = 90;
         const DOUBLE_JUMP_MIN = 0.0;
         const FALL_SLOW_SPEED = 2.0;
 
@@ -165,7 +267,8 @@ export class Player extends GameObject {
         const JUMP_SPEED = -8.0;
         const JUMP_TIME_BONUS = 16;
         const DOUBLE_JUMP_MAX = 8.0;
-        const DOUBLE_JUMP_SPEED = -0.75;
+        const DOUBLE_JUMP_MIN = -6.0;
+        const DOUBLE_JUMP_SPEED = -0.60;
 
         if (this.bonusJumpTimer > 0) {
 
@@ -179,7 +282,7 @@ export class Player extends GameObject {
             if (this.doubleJump) {
 
                 this.speed.y = clamp(this.speed.y + DOUBLE_JUMP_SPEED * event.step,
-                    JUMP_SPEED, DOUBLE_JUMP_MAX);
+                    DOUBLE_JUMP_MIN, DOUBLE_JUMP_MAX);
             }
             else {
 
@@ -196,11 +299,35 @@ export class Player extends GameObject {
     }
 
 
+    private updateAfterImages(event : CoreEvent) {
+
+        const AFTER_IMAGE_SPAWN_TIME = 4;
+        const AFTER_IMAGE_TIME = 20;
+
+        for (let o of this.afterimages) {
+
+            o.update(event);
+        }
+
+        if ((this.afterimageTimer -= event.step) > 0)
+            return;
+
+        this.afterimageTimer += AFTER_IMAGE_SPAWN_TIME;
+
+        nextObject<AfterImage>(this.afterimages, AfterImage)
+            .spawn(this.pos, this.scale, AFTER_IMAGE_TIME, 
+                this.dir < 0 ? Flip.Horizontal : Flip.None,
+                this.sprite);
+    }
+
+
+
     protected preMovementEvent(event: CoreEvent) : void {
         
         this.control(event);
         this.animate(event);
         this.updateTimers(event);
+        this.updateAfterImages(event);
 
         this.pos.x = negMod(this.pos.x, GAME_REGION_WIDTH);
         this.pos.y = negMod(this.pos.y, GAME_REGION_HEIGHT);
@@ -239,6 +366,20 @@ export class Player extends GameObject {
                 this.baseDraw(canvas, x * GAME_REGION_WIDTH, y * GAME_REGION_HEIGHT);
             }
         }
+    }
+
+
+    public preDraw(canvas : Canvas) {
+
+        canvas.changeShader(ShaderType.TexturedAlphaMask);
+
+        for (let o of this.afterimages) {
+
+            o.draw(canvas);
+        }
+
+        canvas.changeShader(ShaderType.Textured);
+        canvas.setColor();
     }
 
 

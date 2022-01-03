@@ -13,8 +13,9 @@ export const enum ShaderType {
     Textured = 0,
     NoTexture = 1,
     TexturedFilter = 2,
+    TexturedAlphaMask = 3,
 };
-const SHADER_TYPE_COUNT = 3;
+const SHADER_TYPE_COUNT = 4;
 
 
 export const enum Flip {
@@ -112,6 +113,8 @@ export class Canvas {
             VertexSource.NoTexture, FragmentSource.NoTexture); 
         this.shaders[ShaderType.TexturedFilter] = new Shader(this.glCtx, 
             VertexSource.Textured, FragmentSource.TexturedFilter);    
+        this.shaders[ShaderType.TexturedAlphaMask] = new Shader(this.glCtx, 
+            VertexSource.Textured, FragmentSource.TexturedAlphaMask);  
 
         this.activeShader = this.shaders[0];
         this.activeShader.use();

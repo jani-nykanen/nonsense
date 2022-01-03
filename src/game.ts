@@ -114,6 +114,7 @@ export class GameScene implements Scene {
 
         this.drawHUD(canvas);
 
+        this.player.preDraw(canvas);
         this.enemyGen.draw(canvas);
         this.player.draw(canvas);
 

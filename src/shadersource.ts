@@ -70,6 +70,34 @@ void main() {
 }`,
 
 
+TexturedAlphaMask : 
+
+`
+precision mediump float;
+     
+uniform sampler2D texSampler;
+
+uniform vec4 color;
+
+uniform vec2 texPos;
+uniform vec2 texSize;
+
+varying vec2 uv;
+
+
+void main() {
+
+    vec2 tex = uv * texSize + texPos;    
+    vec4 res = vec4(color.rgb, color.a * texture2D(texSampler, tex).a);
+
+    if(res.a <= 0.01) {
+         discard;
+    }
+    gl_FragColor = res;
+}`,
+
+
+
 NoTexture : 
 
 `

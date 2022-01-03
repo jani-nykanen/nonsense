@@ -93,20 +93,17 @@ export class Enemy extends GameObject {
     }
 
 
-    public playerCollision(player : Player, event : CoreEvent) : boolean {
+    private playerCollisionBase(player : Player, tx : number, ty : number, event : CoreEvent) : boolean {
 
         const STOMP_OFFSET = 16;
         const STOMP_HEIGHT = 32;
         const SPEED_EPS = 0.5;
         const KNOCKBACK_Y = 8.0;
 
-        if (player.isDying() || this.isDying() || !this.exist)
-            return;
-
         let left = this.pos.x - this.hitbox.x/2;
         let top = this.pos.y - this.hitbox.y/2 - STOMP_OFFSET; 
 
-        let p = player.getPosition();
+        let p = Vector2.add(player.getPosition(), new Vector2(tx, ty));
         let phit = player.getHitbox();
 
         let px = p.x - phit.x/2;
@@ -114,7 +111,7 @@ export class Enemy extends GameObject {
 
         if (player.getSpeed().y > -SPEED_EPS &&
             px + phit.x >= left && px <= left + this.hitbox.x &&
-            py >= top && py <= top+STOMP_HEIGHT + player.getSpeed().y) {
+            py >= top && py <= top+STOMP_HEIGHT + Math.max(0, player.getSpeed().y)) {
 
             player.bounce(event);
 
@@ -129,8 +126,31 @@ export class Enemy extends GameObject {
             }
             return false;
         }
+        return this.overlayObject(player, new Vector2(tx, ty));
+    }
 
-        return this.overlayObject(player);
+
+    public playerCollision(player : Player, event : CoreEvent) : boolean {
+
+        if (player.isDying() || this.isDying() || !this.exist)
+            return;
+
+        for (let y = -1; y <= 1; ++ y) {
+
+            for (let x = -1; x <= 1; ++ x) {
+
+                //if (Math.abs(x) == Math.abs(y) && x != 0)
+                //    continue;
+
+                if (this.playerCollisionBase(player, 
+                        x * GAME_REGION_WIDTH, 
+                        y * GAME_REGION_HEIGHT, event)) {
+
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 
@@ -514,7 +534,7 @@ class Moon extends Enemy {
         super(x, y, dir, 0.475, 0.475, 8);
 
         const JUMP_HEIGHT_MIN = 5.0;
-        const JUMP_HEIGHT_MAX = 10.0;
+        const JUMP_HEIGHT_MAX = 8.0;
         const H_SPEED_MIN = 0.5;
         const H_SPEED_MAX = 3.0;
         const GRAVITY = -8.0;

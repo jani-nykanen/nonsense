@@ -1,10 +1,12 @@
 import { Canvas, ShaderType, TextAlign } from "./canvas.js";
 import { CoreEvent, Scene } from "./core.js";
+import { Ending } from "./ending.js";
 import { EnemyGenerator } from "./enemygen.js";
 import { nextObject } from "./gameobject.js";
 import { Player } from "./player.js";
 import { Star } from "./star.js";
 import { TransitionEffectType } from "./transition.js";
+import { State } from "./types.js";
 import { RGBA, Vector2 } from "./vector.js";
 
 
@@ -33,6 +35,8 @@ export class GameScene implements Scene {
     private deathTimer : number;
 
     private timer : number;
+    private paused : boolean;
+
     private readonly starFunc : StarGeneratingFunction;
 
 
@@ -52,6 +56,7 @@ export class GameScene implements Scene {
         this.deathTimer = 0;
 
         this.timer = INITIAL_TIME * 60;
+        this.paused = false;
 
         event.transition.activate(false, TransitionEffectType.Fade,
             1.0/30.0, null, new RGBA(0.33, 0.67, 1.0));
@@ -105,7 +110,6 @@ export class GameScene implements Scene {
 
     public update(event: CoreEvent) : void {
         
-        
         if (event.transition.isActive()) {
 
             if (!event.transition.isFadingIn()) {
@@ -127,6 +131,13 @@ export class GameScene implements Scene {
             return;
         }
 
+        if (event.input.getAction("start") == State.Pressed) {
+
+            this.paused = !this.paused;
+        }
+
+        if (this.paused) return;
+
         let p : Vector2;
 
         if (!this.player.isDying()) {
@@ -141,6 +152,16 @@ export class GameScene implements Scene {
             }
 
             this.timer = Math.max(-60, this.timer - event.step);
+            if (this.timer <= -60) {
+
+                this.timer = -60;
+                event.transition.activate(true, TransitionEffectType.Fade, 1.0/60.0,
+                    event => {
+
+                        event.changeScene(Ending);
+                    }, new RGBA(1, 1, 1));
+                return;
+            }
         }
         else {
 
@@ -203,15 +224,31 @@ export class GameScene implements Scene {
         const Y_OFF = 16;
         const MAX_SCALE = 0.5;
 
+        let font = canvas.assets.getBitmap("font");
+
         let str = String(Math.max(0, Math.ceil(this.timer / 60)));
         
         let scaleFactor = ((this.timer+60) % 60) / 60.0;
         let scale = 1.0 + MAX_SCALE * scaleFactor;
 
         canvas.setColor(1, 1, 1, alpha);
-        canvas.drawText(canvas.assets.getBitmap("font"),
+        canvas.drawText(font,
             str, canvas.width/2, Y_OFF - (scale-1)*32, -26, 0, TextAlign.Center,
             scale, scale);
+
+        if (this.paused) {
+
+            canvas.changeShader(ShaderType.NoTexture);
+            canvas.setColor(0, 0, 0, 0.33);
+            canvas.fillRect();
+
+            canvas.changeShader(ShaderType.Textured);
+            canvas.setColor(0.67, 1, 0.33);
+
+            canvas.drawText(font, "PAUSED", 
+                canvas.width/2, canvas.height/2-32, 
+                -26, 0, TextAlign.Center);
+        }
 
         canvas.setColor();
     }

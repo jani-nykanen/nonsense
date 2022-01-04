@@ -8,6 +8,7 @@
         {"name": "background", "path": "background.png"},
         {"name": "player", "path": "player.png"},
         {"name": "star", "path": "star.png"},
+        {"name": "ending", "path": "ending.png"},
 
         {"name": "font", "path": "font.png"}
     ],

@@ -105,7 +105,7 @@ export class Core {
 
     private drawLoadingScreen(canvas : Canvas) {
 
-        const BAR_BORDER_WIDTH = 1;
+        const BAR_BORDER_WIDTH = 4;
 
         let barWidth = canvas.width / 4;
         let barHeight = barWidth / 8;

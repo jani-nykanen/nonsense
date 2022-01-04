@@ -228,6 +228,8 @@ export class Enemy extends GameObject {
 
                     return true;
                 }
+
+                if (this.dying) return false;
                 
             }
         }

@@ -12,7 +12,9 @@ export const GAME_REGION_WIDTH = 1024;
 export const GAME_REGION_HEIGHT = 768;
 
 
+const START_PHASE_TIME = 60;
 const INITIAL_TIME = 60;
+const PLAYER_START_Y = 160.5;
 
 
 export type StarGeneratingFunction = (x : number, y : number, speedx : number, speedy : number, time : number, id : number) => void;
@@ -24,6 +26,9 @@ export class GameScene implements Scene {
     private enemyGen : EnemyGenerator;
     private player : Player;
     private stars : Array<Star>;
+
+    private startTimer : number;
+    private startPhase : number;
 
     private timer : number;
     private readonly starFunc : StarGeneratingFunction;
@@ -38,7 +43,10 @@ export class GameScene implements Scene {
         };
 
         this.enemyGen = new EnemyGenerator();
-        this.player = new Player(GAME_REGION_WIDTH/2, 128, this.starFunc);
+        this.player = new Player(GAME_REGION_WIDTH/2, PLAYER_START_Y, this.starFunc);
+
+        this.startPhase = 0;
+        this.startTimer = 0;
 
         this.timer = INITIAL_TIME * 60;
 
@@ -55,9 +63,13 @@ export class GameScene implements Scene {
             1.0/30.0, event => {
 
                 this.enemyGen.reset();
-                this.player = new Player(GAME_REGION_WIDTH/2, 128, this.starFunc);
+                this.player = new Player(GAME_REGION_WIDTH/2, PLAYER_START_Y, this.starFunc);
 
                 this.timer = INITIAL_TIME * 60;
+
+                this.startPhase = 0;
+                this.startTimer = 0;
+
             }, new RGBA(0.33, 0.67, 1.0));
     }
 
@@ -89,7 +101,27 @@ export class GameScene implements Scene {
 
     public update(event: CoreEvent) : void {
         
-        if (event.transition.isActive()) return;
+        
+        if (event.transition.isActive()) {
+
+            if (!event.transition.isFadingIn()) {
+
+                this.player.updateWaitingAnimation(event);
+            }
+            return;
+        }
+
+        if (this.startPhase < 2) {
+
+            if ((this.startTimer += event.step) >= START_PHASE_TIME) {
+
+                this.startTimer -= START_PHASE_TIME;
+                ++ this.startPhase;
+            }
+            this.player.updateWaitingAnimation(event);
+
+            return;
+        }
 
         let p : Vector2;
 
@@ -173,6 +205,35 @@ export class GameScene implements Scene {
     }
 
 
+    public drawStart(canvas : Canvas) {
+
+        const BASE_SCALE = 1.25;
+        const BONUS_SCALE = 2.25;
+        const WAVE_AMPLITUDE = 32;
+
+        const TEXT = ["READY?", "GO!"];
+
+        let t = 1.0;
+        if (this.startTimer < START_PHASE_TIME/2) {
+
+            t = this.startTimer / (START_PHASE_TIME/2);
+        }
+        let scale = BASE_SCALE + (1.0 - t) * (BONUS_SCALE - BASE_SCALE);
+
+        canvas.setColor(1, 1, 0.33, t);
+
+        canvas.drawText(canvas.assets.getBitmap("font"),
+            TEXT[this.startPhase],
+            canvas.width/2, canvas.height/2 - 32 * scale, -26, 0, 
+            TextAlign.Center, scale, scale, 
+            Math.PI*2 * t, 
+            (1.0-t) * WAVE_AMPLITUDE, 
+            Math.PI*2 / TEXT[this.startPhase].length);
+
+        canvas.setColor();
+    }
+
+
     public redraw(canvas: Canvas) : void {
         
         const OVERDRAW_ALPHA = 0.50;
@@ -205,6 +266,11 @@ export class GameScene implements Scene {
         canvas.setColor();
         
         this.drawHUD(canvas, OVERDRAW_ALPHA);
+    
+        if (this.startPhase < 2) {
+
+            this.drawStart(canvas);
+        }
     }
 
 

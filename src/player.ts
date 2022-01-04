@@ -109,6 +109,7 @@ class AfterImage extends ExistingObject {
 
 export class Player extends GameObject {
 
+    private startPos : Vector2;
 
     private scale : Vector2;
     private angle : number;
@@ -120,6 +121,7 @@ export class Player extends GameObject {
     private fastFallBonus : boolean;
     private doubleJump : boolean;
     private fallingSlow : boolean;
+    private slowFallWave : number;
 
     private dir : number;
 
@@ -132,6 +134,8 @@ export class Player extends GameObject {
     constructor(x : number, y : number, starFunc : StarGeneratingFunction) {
 
         super(x, y, true);
+
+        this.startPos = this.pos.clone();
 
         this.sprite = new Sprite(256, 256);
     
@@ -148,6 +152,7 @@ export class Player extends GameObject {
         this.fastFallBonus = false;
         this.doubleJump = false;
         this.fallingSlow = false;
+        this.slowFallWave = 0.0;
 
         this.dir = 0;
 
@@ -193,7 +198,9 @@ export class Player extends GameObject {
         const FAST_FALL_SPEED = 16.0;
         const DOUBLE_JUMP_TIME = 90;
         const DOUBLE_JUMP_MIN = 0.0;
-        const FALL_SLOW_SPEED = 3.0;
+        const FALL_SLOW_SPEED = 2.0;
+        const FALL_SLOW_AMPLITUDE = 4.0;
+        const FALL_SLOW_WAVE_SPEED = 0.15;
 
         let stick = event.input.getStick();
 
@@ -247,7 +254,12 @@ export class Player extends GameObject {
             ((event.input.getAction("jump") & State.DownOrPressed) == 1);
         if (this.fallingSlow) {
 
-            this.target.y = FALL_SLOW_SPEED;
+            this.slowFallWave = (this.slowFallWave + FALL_SLOW_WAVE_SPEED*event.step) % (Math.PI*2);
+            this.target.y = FALL_SLOW_SPEED - Math.sin(this.slowFallWave) * FALL_SLOW_AMPLITUDE;
+        }
+        else {
+
+            this.slowFallWave = 0.0;
         }
         
     }
@@ -371,6 +383,19 @@ export class Player extends GameObject {
 
         this.pos.x = negMod(this.pos.x, GAME_REGION_WIDTH);
         this.pos.y = negMod(this.pos.y, GAME_REGION_HEIGHT);
+    }
+
+
+    public updateWaitingAnimation(event : CoreEvent) {
+        
+        const ANIM_SPEED = 4;
+        const WAVE_SPEED = 0.05;
+        const AMPLITUDE = 16;
+
+        this.sprite.animate(2, 0, 3, ANIM_SPEED, event.step);
+
+        this.slowFallWave = (this.slowFallWave + WAVE_SPEED * event.step) % (Math.PI*2);
+        this.pos.y = this.startPos.y + Math.sin(this.slowFallWave) * AMPLITUDE;
     }
 
 

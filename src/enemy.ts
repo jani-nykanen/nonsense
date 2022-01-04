@@ -149,6 +149,7 @@ export class Enemy extends GameObject {
         const SPEED_EPS = 1.5;
         const KNOCKBACK_Y = 8.0;
         const STOMP_WIDTH_OFFSET = 16;
+        const SAFE_ZONE = 64;
 
         let left = this.pos.x - this.hitbox.x/2 - STOMP_WIDTH_OFFSET;
         let top = this.pos.y - this.hitbox.y/2 - STOMP_OFFSET; 
@@ -181,6 +182,10 @@ export class Enemy extends GameObject {
         }
         
         if (this.harmful &&
+            this.pos.y > -SAFE_ZONE &&
+            this.pos.y < GAME_REGION_HEIGHT + SAFE_ZONE &&
+            this.pos.x > -SAFE_ZONE &&
+            this.pos.x < GAME_REGION_WIDTH + SAFE_ZONE &&
             this.overlayObject(player, new Vector2(tx, ty))) {
 
             player.hurt();
@@ -195,7 +200,7 @@ export class Enemy extends GameObject {
         const EPS = 1;
 
         if (player.isDying() || this.isDying() || !this.exist)
-            return;
+            return false;
 
         let hbox = player.getHitbox();
         let p = player.getPosition();
@@ -211,19 +216,19 @@ export class Enemy extends GameObject {
 
                 //if (Math.abs(x) == Math.abs(y) && x != 0)
                 //    continue;
-
+/*
                 this.playerCollisionBase(player, 
                     x * GAME_REGION_WIDTH, 
                     y * GAME_REGION_HEIGHT, event);
-
-                /*
+*/
+                
                 if (this.playerCollisionBase(player, 
                         x * GAME_REGION_WIDTH, 
                         y * GAME_REGION_HEIGHT, event)) {
 
                     return true;
                 }
-                */
+                
             }
         }
         return false;

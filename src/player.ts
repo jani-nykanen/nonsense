@@ -1,7 +1,7 @@
 import { Canvas, Flip, ShaderType } from "./canvas.js";
 import { CoreEvent } from "./core.js";
 import { GAME_REGION_HEIGHT, GAME_REGION_WIDTH, StarGeneratingFunction } from "./game.js";
-import { ExistingObject, GameObject, nextObject } from "./gameobject.js";
+import { ExistingObject, GameObject, nextObject, updateSpeedAxis } from "./gameobject.js";
 import { clamp, negMod } from "./math.js";
 import { Sprite } from "./sprite.js";
 import { State } from "./types.js";
@@ -112,7 +112,6 @@ export class Player extends GameObject {
 
     private scale : Vector2;
     private angle : number;
-    private angleTarget : number;
 
     private jumpTimer : number;
     private bonusJumpTimer : number;
@@ -129,9 +128,6 @@ export class Player extends GameObject {
 
     private starFunc : StarGeneratingFunction;
 
-    // TEMP
-    private hurtTimer : number;
-
 
     constructor(x : number, y : number, starFunc : StarGeneratingFunction) {
 
@@ -140,7 +136,6 @@ export class Player extends GameObject {
         this.sprite = new Sprite(256, 256);
     
         this.angle = 0;
-        this.angleTarget = 0;
         this.scale = new Vector2(0.50, 0.50);
 
         this.friction = new Vector2(0.50, 0.30);
@@ -159,9 +154,34 @@ export class Player extends GameObject {
         this.afterimages = new Array<AfterImage> ();
         this.afterimageTimer = 0;
 
-        this.hurtTimer = 0;
-
         this.starFunc = starFunc;
+    }
+
+
+    protected die(event: CoreEvent) : boolean {
+
+        const GRAVITY = 8.0;
+        const ROTATION = 0.05;
+        const SCALE_SPEED = 0.015;
+        const SCALE_MAX = 2.0;
+
+        this.angle = (this.angle + ROTATION * event.step) % (Math.PI*2);
+
+        this.target.y = GRAVITY * (this.scale.x*2);
+        this.friction.y = 0.30 * (this.scale.x*2);
+
+        this.updateMovement(event);        
+
+        for (let o of this.afterimages) {
+
+            o.update(event);
+        }
+
+        this.scale.x = updateSpeedAxis(this.scale.x, SCALE_MAX, SCALE_SPEED*event.step);
+        this.scale.y = this.scale.x;
+
+        return this.speed.y > 0 && 
+            this.pos.y > GAME_REGION_HEIGHT + this.sprite.height/2 * this.scale.y;
     }
 
 
@@ -173,7 +193,7 @@ export class Player extends GameObject {
         const FAST_FALL_SPEED = 16.0;
         const DOUBLE_JUMP_TIME = 90;
         const DOUBLE_JUMP_MIN = 0.0;
-        const FALL_SLOW_SPEED = 2.0;
+        const FALL_SLOW_SPEED = 3.0;
 
         let stick = event.input.getStick();
 
@@ -316,11 +336,6 @@ export class Player extends GameObject {
             }
         }
 
-
-        if (this.hurtTimer > 0) {
-
-            this.hurtTimer -= event.step;
-        }
     }
 
 
@@ -386,9 +401,7 @@ export class Player extends GameObject {
     
         const EPS = 1;
 
-        if (this.hurtTimer > 0 &&
-            Math.floor(this.hurtTimer / 2) % 2 == 0)
-            return;
+        if (!this.exist) return;
 
         let hbox = new Vector2(this.sprite.width * this.scale.x, this.sprite.height * this.scale.y);
         let p = this.pos;
@@ -397,6 +410,12 @@ export class Player extends GameObject {
         let endx = p.x - hbox.x/2 <= EPS ? 1 : 0;
         let starty = p.y + hbox.y/2 >= GAME_REGION_HEIGHT-EPS ? -1 : 0;
         let endy = p.y - hbox.y/2 <= EPS ? 1 : 0;
+
+        if (this.dying) {
+
+            starty = 0;
+            endy = 0;
+        }
 
         for (let y = starty; y <= endy; ++ y) {
 
@@ -441,7 +460,7 @@ export class Player extends GameObject {
                 Math.cos(angle) * STAR_SPEED,
                 Math.sin(angle) * STAR_SPEED * 0.67);
 
-            this.starFunc(x, y, speed.x, speed.y, STAR_TIME);
+            this.starFunc(x, y, speed.x, speed.y, STAR_TIME, 0);
         }
 
     }
@@ -473,13 +492,17 @@ export class Player extends GameObject {
     }
 
 
-
     public hurt() {
 
-        const HURT_TIME = 60;
+        const DEATH_JUMP = -12.0;
 
-        if (this.hurtTimer > 0) return;
+        if (this.dying) return;
         
-        this.hurtTimer = HURT_TIME;
+        this.stopMovement();
+        this.speed.y = DEATH_JUMP;
+
+        this.sprite.setFrame(0, 6);
+
+        this.dying = true;
     }
 }

@@ -27,7 +27,7 @@ export class Star extends ExistingObject {
     }
 
 
-    public spawn(x : number, y : number, speedx : number, speedy : number, time : number) {
+    public spawn(x : number, y : number, speedx : number, speedy : number, time : number, id = 0) {
 
         this.pos.x = x;
         this.pos.y = y;
@@ -37,7 +37,7 @@ export class Star extends ExistingObject {
 
         this.timer = time;
 
-        this.sprite.setFrame(0, 0);
+        this.sprite.setFrame(0, id);
 
         this.exist = true;
     }
@@ -49,7 +49,8 @@ export class Star extends ExistingObject {
 
         if (!this.exist) return;
 
-        this.sprite.animate(0, 0, 3, ANIM_SPEED, event.step);
+        this.sprite.animate(this.sprite.getRow(), 
+            0, 3, ANIM_SPEED, event.step);
 
         this.pos.x += this.speed.x * event.step;
         this.pos.y += this.speed.y * event.step;

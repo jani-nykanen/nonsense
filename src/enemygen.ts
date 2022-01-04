@@ -20,7 +20,13 @@ export class EnemyGenerator {
         this.enemies = new Array<Enemy> ();
         this.timers = new Array<number> (TIMER_COUNT);
 
-        this.computeInitialTimes();
+        this.reset();
+    }
+
+
+    public reset() {
+
+        this.enemies.length = 0;
 
         // Create the initial enemy
         this.enemies.push(
@@ -28,7 +34,9 @@ export class EnemyGenerator {
                 GAME_REGION_WIDTH/2, 
                 GAME_REGION_HEIGHT-128, 
                 1))
-        )
+        );
+
+        this.computeInitialTimes();
     }
 
 
@@ -45,8 +53,8 @@ export class EnemyGenerator {
 
     private computeNewTime(index : number) : number {
 
-        const MIN_TIME = [120, 150, 150, 180, 210, 210];
-        const MAX_TIME = [240, 300, 300, 360, 480, 480];
+        const MIN_TIME = [90, 120, 150, 150, 180, 210];
+        const MAX_TIME = [180, 240, 300, 300, 360, 420];
 
         return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }
@@ -143,7 +151,7 @@ export class EnemyGenerator {
     }
 
 
-    public update(event : CoreEvent) {
+    public update(event : CoreEvent, dyingOnly = false) {
 
         let o : Enemy;
         for (let i = 0; i < this.enemies.length; ++ i) {
@@ -154,7 +162,9 @@ export class EnemyGenerator {
                 this.enemies.splice(i, 1);
                 continue;
             }
-            o.update(event);
+
+            if (!dyingOnly || o.isDying())
+                o.update(event);
         }
         this.updateTimers(event);
     }

@@ -5,7 +5,7 @@ import { nextObject } from "./gameobject.js";
 import { Player } from "./player.js";
 import { Star } from "./star.js";
 import { TransitionEffectType } from "./transition.js";
-import { RGBA } from "./vector.js";
+import { RGBA, Vector2 } from "./vector.js";
 
 
 export const GAME_REGION_WIDTH = 1024;
@@ -15,7 +15,7 @@ export const GAME_REGION_HEIGHT = 768;
 const INITIAL_TIME = 60;
 
 
-export type StarGeneratingFunction = (x : number, y : number, speedx : number, speedy : number, time : number) => void;
+export type StarGeneratingFunction = (x : number, y : number, speedx : number, speedy : number, time : number, id : number) => void;
 
 
 export class GameScene implements Scene {
@@ -26,17 +26,19 @@ export class GameScene implements Scene {
     private stars : Array<Star>;
 
     private timer : number;
+    private readonly starFunc : StarGeneratingFunction;
 
 
     constructor(param : any, event : CoreEvent) {
 
-        this.enemyGen = new EnemyGenerator();
-        this.player = new Player(GAME_REGION_WIDTH/2, 128,
-            (x, y, sx, sy, time) => {
+        this.starFunc = (x, y, sx, sy, time, id) => {
 
-                nextObject<Star>(this.stars, Star)
-                    .spawn(x, y, sx, sy, time);
-            });
+            nextObject<Star>(this.stars, Star)
+                .spawn(x, y, sx, sy, time, id);
+        };
+
+        this.enemyGen = new EnemyGenerator();
+        this.player = new Player(GAME_REGION_WIDTH/2, 128, this.starFunc);
 
         this.timer = INITIAL_TIME * 60;
 
@@ -47,24 +49,78 @@ export class GameScene implements Scene {
     }
 
 
+    private reset(event : CoreEvent) {
+
+        event.transition.activate(true, TransitionEffectType.Fade,
+            1.0/30.0, event => {
+
+                this.enemyGen.reset();
+                this.player = new Player(GAME_REGION_WIDTH/2, 128, this.starFunc);
+
+                this.timer = INITIAL_TIME * 60;
+            }, new RGBA(0.33, 0.67, 1.0));
+    }
+
+
+    private spawnStars(x : number, y : number, count : number) {
+
+        const STAR_SPEED = 12.0;
+        const STAR_TIME = 16;
+
+        let angleStep = Math.PI*2 / count;
+        let angleStart = 0; // angleStep/2;
+        let angle : number;
+
+        let speed : Vector2;
+
+        for (let i = 0; i < count; ++ i) {
+
+            angle = angleStart + angleStep * i;
+
+            speed = new Vector2(
+                Math.cos(angle) * STAR_SPEED,
+                Math.sin(angle) * STAR_SPEED);
+
+            this.starFunc(x, y, speed.x, speed.y, STAR_TIME, 1);
+        }
+
+    }
+
+
     public update(event: CoreEvent) : void {
         
         if (event.transition.isActive()) return;
 
-        this.enemyGen.update(event);
-        if (this.enemyGen.playerCollision(this.player, event)) {
+        let p : Vector2;
 
-            // Game over!
+        if (!this.player.isDying()) {
+
+            this.enemyGen.update(event);
+            if (this.enemyGen.playerCollision(this.player, event)) {
+
+                p = this.player.getPosition();
+
+                this.spawnStars(p.x, p.y, 8);
+            }
+
+            this.timer = Math.max(-60, this.timer - event.step);
+        }
+        else {
+
+            this.enemyGen.update(event, true);
         }
 
         this.player.update(event);
+        if (!this.player.doesExist()) {
+
+            this.reset(event);
+            return;
+        }
 
         for (let o of this.stars) {
 
             o.update(event);
         }
-
-        this.timer = Math.max(-60, this.timer - event.step);
     }
 
 

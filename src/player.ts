@@ -200,7 +200,7 @@ export class Player extends GameObject {
         const DOUBLE_JUMP_MIN = 0.0;
         const FALL_SLOW_SPEED = 2.0;
         const FALL_SLOW_AMPLITUDE = 4.0;
-        const FALL_SLOW_WAVE_SPEED = 0.15;
+        const FALL_SLOW_WAVE_SPEED = 0.075;
 
         let stick = event.input.getStick();
 

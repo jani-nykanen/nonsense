@@ -15,6 +15,7 @@ export const GAME_REGION_HEIGHT = 768;
 const START_PHASE_TIME = 60;
 const INITIAL_TIME = 60;
 const PLAYER_START_Y = 160.5;
+const DEATH_TIME = 30;
 
 
 export type StarGeneratingFunction = (x : number, y : number, speedx : number, speedy : number, time : number, id : number) => void;
@@ -29,6 +30,7 @@ export class GameScene implements Scene {
 
     private startTimer : number;
     private startPhase : number;
+    private deathTimer : number;
 
     private timer : number;
     private readonly starFunc : StarGeneratingFunction;
@@ -47,6 +49,7 @@ export class GameScene implements Scene {
 
         this.startPhase = 0;
         this.startTimer = 0;
+        this.deathTimer = 0;
 
         this.timer = INITIAL_TIME * 60;
 
@@ -69,6 +72,7 @@ export class GameScene implements Scene {
 
                 this.startPhase = 0;
                 this.startTimer = 0;
+                this.deathTimer = 0;
 
             }, new RGBA(0.33, 0.67, 1.0));
     }
@@ -133,6 +137,7 @@ export class GameScene implements Scene {
                 p = this.player.getPosition();
 
                 this.spawnStars(p.x, p.y, 8);
+                this.deathTimer = 0;
             }
 
             this.timer = Math.max(-60, this.timer - event.step);
@@ -140,6 +145,8 @@ export class GameScene implements Scene {
         else {
 
             this.enemyGen.update(event, true);
+
+            this.deathTimer = Math.min(DEATH_TIME, this.deathTimer + event.step);
         }
 
         this.player.update(event);
@@ -161,9 +168,14 @@ export class GameScene implements Scene {
         const SHADOW_OFFSET_X = 8;
         const SHADOW_OFFSET_Y = 8;
         const ALPHA = 0.25;
+        const DEATH_MOD = 0.5;
 
         let bmp = canvas.assets.getBitmap("background");
 
+        let t = 1.0 - this.deathTimer / DEATH_TIME;
+        let s = (1.0-DEATH_MOD) + DEATH_MOD * t;
+
+        canvas.setColor(1, s, s);
         canvas.drawBitmap(bmp, 0, 0);
 
         canvas.setColor(0, 0, 0);
@@ -178,7 +190,7 @@ export class GameScene implements Scene {
         canvas.transform.pop();
         canvas.transform.use();
 
-        canvas.setColor(1, 1, 1, 1.0 - ALPHA);
+        canvas.setColor(1, s, s, 1.0 - ALPHA);
         canvas.drawBitmap(bmp, 0, 0);
         canvas.setColor();
 

@@ -49,7 +49,7 @@ export class GameScene implements Scene {
         };
 
         this.enemyGen = new EnemyGenerator();
-        this.player = new Player(GAME_REGION_WIDTH/2, PLAYER_START_Y, this.starFunc);
+        this.player = new Player(GAME_REGION_WIDTH/2 + 0.5, PLAYER_START_Y, this.starFunc);
 
         this.startPhase = 0;
         this.startTimer = 0;
@@ -68,7 +68,7 @@ export class GameScene implements Scene {
             1.0/30.0, event => {
 
                 this.enemyGen.reset();
-                this.player = new Player(GAME_REGION_WIDTH/2, PLAYER_START_Y, this.starFunc);
+                this.player = new Player(GAME_REGION_WIDTH/2 + 0.5, PLAYER_START_Y, this.starFunc);
 
                 this.timer = INITIAL_TIME * 60;
 

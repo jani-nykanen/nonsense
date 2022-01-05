@@ -1,9 +1,9 @@
 import { Core } from "./core.js";
-import { TitleScreen } from "./titlescreen.js";
+import { Intro } from "./intro.js";
 
 
 window.onload = () => (new Core(1024, 768))
-    .run(TitleScreen, "assets/index.json",
+    .run(Intro, "assets/index.json",
     event => {
 
         event.input

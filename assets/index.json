@@ -10,6 +10,7 @@
         {"name": "star", "path": "star.png"},
         {"name": "ending", "path": "ending.png"},
         {"name": "logo", "path": "logo.png"},
+        {"name": "creator", "path": "creator.png"},
 
         {"name": "font", "path": "font.png"}
     ],

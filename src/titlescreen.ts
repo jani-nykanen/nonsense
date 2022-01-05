@@ -1,8 +1,14 @@
 import { Canvas, ShaderType, TextAlign } from "./canvas.js";
 import { CoreEvent, Scene } from "./core.js";
 import { GameScene } from "./game.js";
+import { updateSpeedAxis } from "./gameobject.js";
 import { TransitionEffectType } from "./transition.js";
 import { RGBA } from "./vector.js";
+import { VERSION } from "./version.js";
+
+
+const FLOOR_POS = 0;
+const BOUNCE_TIME = 60;
 
 
 export class TitleScreen implements Scene {
@@ -11,6 +17,12 @@ export class TitleScreen implements Scene {
     private waveTimer : number;
     private fadingOut : boolean;
     private fadeOutTimer : number;
+
+    private phase : number;
+    private pos : number;
+    private gravity : number;
+    private bounceTimer : number;
+    private pressAnyKeyAlpha : number;
 
 
     constructor(param : any, event : CoreEvent) {
@@ -22,12 +34,22 @@ export class TitleScreen implements Scene {
 
         this.fadingOut = false;
         this.fadeOutTimer = 0;
+        this.bounceTimer = 0;
+        this.pressAnyKeyAlpha = 0;
+
+        this.pos = -400;
+        this.gravity = 0;
+
+        this.phase = 0;
     }
 
 
     public update(event: CoreEvent) : void {
 
         const WAVE_TIME = 0.15;
+        const GRAVITY_TARGET = 64.0;
+        const GRAVITY_DELTA = 1.0;
+        const ALPHA_SPEED = 0.033;
 
         if (event.transition.isActive()) {
 
@@ -41,6 +63,31 @@ export class TitleScreen implements Scene {
             return;
         }
         this.fadingOut = false;
+
+        if (this.phase == 0) {
+
+            this.gravity = updateSpeedAxis(this.gravity, 
+                GRAVITY_TARGET, GRAVITY_DELTA*event.step);
+
+            this.pos += this.gravity * event.step;
+            if (this.pos > FLOOR_POS) {
+
+                this.pos = FLOOR_POS;
+                ++ this.phase;
+            }
+            return;
+        }
+        else if (this.phase == 1) {
+
+            if ((this.bounceTimer += event.step) >= BOUNCE_TIME) {
+
+                this.bounceTimer = BOUNCE_TIME;
+                ++ this.phase;
+            }
+            return;
+        }
+
+        this.pressAnyKeyAlpha = updateSpeedAxis(this.pressAnyKeyAlpha, 1.0, ALPHA_SPEED*event.step);
         
         if (event.input.anyPressed()) {
 
@@ -57,8 +104,11 @@ export class TitleScreen implements Scene {
 
     public redraw(canvas: Canvas) : void {
         
+        // TODO: Split to smaller functions (stop being lazy)
+
+        const LOGO_SCALE_MOD = 0.45;
         const LOGO_BASE_SCALE = 0.75;
-        const FADE_OUT_SCALE = 2.0;
+        const FADE_OUT_SCALE = 4.0;
         const FADE_OUT_ROTATION = Math.PI/3;
 
         let bmp = canvas.assets.getBitmap("logo");
@@ -69,7 +119,7 @@ export class TitleScreen implements Scene {
         if (this.fadingOut) {
 
             angle = FADE_OUT_ROTATION * this.fadeOutTimer;
-            scale += FADE_OUT_SCALE * this.fadeOutTimer;
+            scale += FADE_OUT_SCALE * this.fadeOutTimer * this.fadeOutTimer;
         }
 
         canvas.transform
@@ -86,10 +136,29 @@ export class TitleScreen implements Scene {
     
         canvas.changeShader(ShaderType.Textured);
 
+        let bounceScaleX = 1;
+        let bounceScaleY = 1;
+        let t = this.bounceTimer / BOUNCE_TIME;
+
+        if (this.bounceTimer > 0) {
+
+            if (t >= 0.5) {
+
+                bounceScaleY = 1.0 + LOGO_SCALE_MOD * Math.sin((t-0.5)*2 * Math.PI);
+                bounceScaleX = 1.0 - LOGO_SCALE_MOD * Math.sin((t-0.5)*2 * Math.PI);
+            }
+            else {
+
+                bounceScaleY = 1.0 - LOGO_SCALE_MOD * Math.sin(t*2 * Math.PI);
+                bounceScaleX = 1.0 + LOGO_SCALE_MOD * Math.sin(t*2 * Math.PI);
+            }
+        }
+
         canvas.transform
             .push()
-            .translate(canvas.width/2, canvas.height/2)
-            .scale(LOGO_BASE_SCALE, LOGO_BASE_SCALE)
+            .translate(canvas.width/2, canvas.height/2 + this.pos)
+            .scale(LOGO_BASE_SCALE * bounceScaleX, 
+                   LOGO_BASE_SCALE * bounceScaleY)
             .use();
 
         canvas.setColor();
@@ -98,16 +167,21 @@ export class TitleScreen implements Scene {
         canvas.transform.pop();
         canvas.transform.use();
 
-        if (!this.fadingOut) {
+        if (!this.fadingOut && this.phase >= 2) {
 
-            canvas.setColor(0.67, 1, 0.33);
+            canvas.setColor(0.67, 1, 0.33, this.pressAnyKeyAlpha);
             canvas.drawText(font, "PRESS ANY KEY", 
                 canvas.width/2, canvas.height/2 + 128, -26, 0, TextAlign.Center, 
                 1, 1, this.waveTimer, 32, Math.PI*2 / 12);
-
+            
             canvas.setColor(1.0, 1, 0.33);
             canvas.drawText(font, "(c) 2022 Jani Nyk@nen", 
                 canvas.width/2, canvas.height - 40, -26, 0, TextAlign.Center, 
+                0.5, 0.5);
+
+            canvas.setColor(0.67, 0.67, 0.67);
+            canvas.drawText(font, "Version " + VERSION, 
+                2, 2, -26, 0, TextAlign.Left, 
                 0.5, 0.5);
         }
 

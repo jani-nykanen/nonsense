@@ -1,6 +1,6 @@
 import { Canvas, ShaderType, TextAlign } from "./canvas.js";
 import { CoreEvent, Scene } from "./core.js";
-import { GameScene } from "./game.js";
+import { TitleScreen } from "./titlescreen.js";
 import { TransitionEffectType } from "./transition.js";
 import { RGBA } from "./vector.js";
 
@@ -76,7 +76,7 @@ export class Ending implements Scene {
                 event.transition.activate(true, TransitionEffectType.Fade,
                     1.0/240.0, event => {
 
-                        event.changeScene(GameScene);
+                        event.changeScene(TitleScreen);
                     }, new RGBA(1, 1, 1));
                 return;
             }

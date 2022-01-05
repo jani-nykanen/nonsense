@@ -58,9 +58,6 @@ export class GameScene implements Scene {
         this.timer = INITIAL_TIME * 60;
         this.paused = false;
 
-        event.transition.activate(false, TransitionEffectType.Fade,
-            1.0/30.0, null, new RGBA(0.33, 0.67, 1.0));
-
         this.stars = new Array<Star> ();
     }
 

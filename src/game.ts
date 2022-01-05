@@ -149,9 +149,9 @@ export class GameScene implements Scene {
             }
 
             this.timer = Math.max(-60, this.timer - event.step);
-            if (this.timer <= -60) {
+            if (this.timer <= 0) {
 
-                this.timer = -60;
+                this.timer = 0;
                 event.transition.activate(true, TransitionEffectType.Fade, 1.0/60.0,
                     event => {
 

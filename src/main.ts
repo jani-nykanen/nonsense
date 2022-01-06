@@ -1,9 +1,9 @@
+import { AudioIntro } from "./audiointro.js";
 import { Core } from "./core.js";
-import { Intro } from "./intro.js";
 
 
 window.onload = () => (new Core(1024, 768))
-    .run(Intro, "assets/index.json",
+    .run(AudioIntro, "assets/index.json",
     event => {
 
         event.input

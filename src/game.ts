@@ -223,9 +223,9 @@ export class GameScene implements Scene {
 
         let font = canvas.assets.getBitmap("font");
 
-        let str = String(Math.max(0, Math.ceil(this.timer / 60)));
+        let str = String(Math.max(0, Math.floor(this.timer / 60)));
         
-        let scaleFactor = ((this.timer+60) % 60) / 60.0;
+        let scaleFactor = (this.timer % 60) / 60.0;
         let scale = 1.0 + MAX_SCALE * scaleFactor;
 
         canvas.setColor(1, 1, 1, alpha);

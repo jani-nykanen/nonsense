@@ -45,9 +45,6 @@ export class Intro implements Scene {
 
     public redraw(canvas: Canvas) : void {
         
-        // TODO: Split to smaller functions (stop being lazy)
-
-
         canvas.transform
             .loadIdentity()
             .setView(canvas.width, canvas.height)

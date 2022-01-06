@@ -110,17 +110,20 @@ export class Core {
         let barWidth = canvas.width / 4;
         let barHeight = barWidth / 8;
 
+        canvas.transform
+            .loadIdentity()
+            .setView(canvas.width, canvas.height)
+            .use();
+
         canvas.changeShader(ShaderType.NoTexture);
 
-        canvas.clear(0, 0, 0);
+        canvas.setColor(0, 0, 0);
+        canvas.fillRect();
     
         let t = this.assets.dataLoadedUnit();
         let x = canvas.width/2 - barWidth/2;
         let y = canvas.height/2 - barHeight/2;
 
-        x |= 0;
-        y |= 0;
-    
         // Outlines
         canvas.setColor();
         canvas.fillRect(x-BAR_BORDER_WIDTH*2, y-BAR_BORDER_WIDTH*2, 
@@ -147,7 +150,6 @@ export class Core {
         this.oldTime = ts;
 
         let refreshCount = (this.timeSum / FRAME_WAIT) | 0;
-        let redraw = refreshCount > 0;
 
         while ((refreshCount --) > 0) {
 
@@ -172,21 +174,19 @@ export class Core {
             this.timeSum -= FRAME_WAIT;
         }
 
-        if (redraw) {
+        this.canvas.drawToFramebuffer(canvas => {
 
-            this.canvas.drawToFramebuffer(canvas => {
+            if (this.initialized) {
 
-                if (this.initialized) {
+                this.activeScene.redraw(canvas);
+                this.transition.draw(canvas);
+            }
+            else {
 
-                    this.activeScene.redraw(canvas);
-                    this.transition.draw(canvas);
-                }
-                else {
-
-                    this.drawLoadingScreen(canvas);
-                }
-            });
-        }
+                this.drawLoadingScreen(canvas);
+            }
+        });
+        
         this.canvas.drawFramebufferTexture();
         this.canvas.transform.clearStacks();
 

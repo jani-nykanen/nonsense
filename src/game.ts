@@ -16,7 +16,7 @@ export const GAME_REGION_HEIGHT = 768;
 
 const START_PHASE_TIME = 60;
 const INITIAL_TIME = 60;
-const PLAYER_START_Y = 160.5;
+const PLAYER_START_Y = 160;
 const DEATH_TIME = 30;
 
 
@@ -36,6 +36,7 @@ export class GameScene implements Scene {
 
     private timer : number;
     private paused : boolean;
+    private startPlayed : boolean;
 
     private readonly starFunc : StarGeneratingFunction;
 
@@ -49,11 +50,13 @@ export class GameScene implements Scene {
         };
 
         this.enemyGen = new EnemyGenerator();
-        this.player = new Player(GAME_REGION_WIDTH/2 + 0.5, PLAYER_START_Y, this.starFunc);
+        this.player = new Player(GAME_REGION_WIDTH/2, PLAYER_START_Y, this.starFunc);
 
         this.startPhase = 0;
         this.startTimer = 0;
         this.deathTimer = 0;
+
+        this.startPlayed = false;
 
         this.timer = INITIAL_TIME * 60;
         this.paused = false;
@@ -75,6 +78,8 @@ export class GameScene implements Scene {
                 this.startPhase = 0;
                 this.startTimer = 0;
                 this.deathTimer = 0;
+
+                this.startPlayed = false;
 
             }, new RGBA(0.33, 0.67, 1.0));
     }
@@ -101,7 +106,6 @@ export class GameScene implements Scene {
 
             this.starFunc(x, y, speed.x, speed.y, STAR_TIME, 1);
         }
-
     }
 
 
@@ -116,9 +120,18 @@ export class GameScene implements Scene {
             return;
         }
 
+        if (!this.startPlayed) {
+
+            event.audio.playSample(event.assets.getSample("ready"), 0.70);
+            this.startPlayed = true;
+        }
+
         if (this.startPhase < 2) {
 
             if ((this.startTimer += event.step) >= START_PHASE_TIME) {
+
+                if (this.startPhase == 0)
+                    event.audio.playSample(event.assets.getSample("go"), 0.70);
 
                 this.startTimer -= START_PHASE_TIME;
                 ++ this.startPhase;
@@ -131,8 +144,8 @@ export class GameScene implements Scene {
         if (event.input.getAction("start") == State.Pressed) {
 
             this.paused = !this.paused;
+            event.audio.playSample(event.assets.getSample("pause"), 0.60);
         }
-
         if (this.paused) return;
 
         let p : Vector2;

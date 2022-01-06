@@ -278,6 +278,9 @@ export class Player extends GameObject {
         else if (this.speed.x > EPS)
             this.dir = 1;
 
+        let oldFrame = this.sprite.getColumn();
+        let oldRow = this.sprite.getRow();
+
         if ((this.doubleJump && this.jumpTimer > 0) ||
             this.fallingSlow) {
 
@@ -286,6 +289,14 @@ export class Player extends GameObject {
                 ++ row;
 
             this.sprite.animate(row, 0, 3, DOUBLE_JUMP_ANIM_SPEED, event.step);
+
+            if (oldFrame != 1 && 
+                this.sprite.getColumn() == 1 && 
+                oldRow == this.sprite.getRow()) {
+
+                event.audio.playSample(event.assets.getSample("propeller"), 0.50);
+            }
+
             return;
         }
 
@@ -517,7 +528,7 @@ export class Player extends GameObject {
     }
 
 
-    public hurt() {
+    public hurt(event : CoreEvent) {
 
         const DEATH_JUMP = -12.0;
 
@@ -529,5 +540,7 @@ export class Player extends GameObject {
         this.sprite.setFrame(0, 6);
 
         this.dying = true;
+
+        event.audio.playSample(event.assets.getSample("die"), 0.60);
     }
 }

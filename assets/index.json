@@ -18,6 +18,15 @@
     "samplePath" : "assets/audio/",
     "samples" : [
 
+        {"name": "kill", "path": "kill.wav"},
+        {"name": "propeller", "path": "propeller.wav"},
+        {"name": "ready", "path": "ready.wav"},
+        {"name": "go", "path": "go.wav"},
+        {"name": "start", "path": "start.wav"},
+        {"name": "die", "path": "die.wav"},
+        {"name": "hit", "path": "hit.wav"},
+        {"name": "pause", "path": "pause.wav"},
+        {"name": "bounce", "path": "bounce.wav"}
     ],
 
     "tilemapPath" : "assets/levels/",

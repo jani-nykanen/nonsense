@@ -90,6 +90,8 @@ export class TitleScreen implements Scene {
             this.pos += this.gravity * event.step;
             if (this.pos > FLOOR_POS) {
 
+                event.audio.playSample(event.assets.getSample("hit"), 0.60);
+
                 this.pos = FLOOR_POS;
                 ++ this.phase;
             }
@@ -113,6 +115,7 @@ export class TitleScreen implements Scene {
         if (event.input.anyPressed()) {
 
             this.flickerTimer = FLICKER_TIME;
+            event.audio.playSample(event.assets.getSample("start"), 0.60);
         }
     }
 

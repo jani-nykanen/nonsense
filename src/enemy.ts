@@ -54,7 +54,6 @@ export class Enemy extends GameObject {
     }
 
 
-    // Also add player here?
     protected updateAI(event : CoreEvent) {}
 
 
@@ -172,11 +171,15 @@ export class Enemy extends GameObject {
                 this.dying = true;
                 
                 this.sprite.setFrame(0, 6);
+
+                event.audio.playSample(event.assets.getSample("kill"), 0.60);
             }
             else {
 
                 this.bounceTimer = BOUNCE_TIME;
                 this.speed.y = KNOCKBACK_Y;
+
+                event.audio.playSample(event.assets.getSample("bounce"), 0.60);
             }
             return false;
         }
@@ -188,7 +191,7 @@ export class Enemy extends GameObject {
             this.pos.x < GAME_REGION_WIDTH + SAFE_ZONE &&
             this.overlayObject(player, new Vector2(tx, ty))) {
 
-            player.hurt();
+            player.hurt(event);
             return true;
         }
         return false;

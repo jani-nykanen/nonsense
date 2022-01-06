@@ -109,4 +109,10 @@ export class TransitionEffectManager {
     public getSpeed = () : number => this.speed;
     public getTime = () : number => this.timer;
     public isFadingIn = () : boolean => this.fadeIn;
+
+
+    public deactivate() {
+
+        this.active = false;
+    }
 }

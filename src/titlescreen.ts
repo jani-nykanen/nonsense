@@ -18,17 +18,17 @@ export class TitleScreen implements Scene {
     private fadingOut : boolean;
     private fadeOutTimer : number;
 
+    private flickerTimer : number;
+    private pressAnyKeyAlpha : number;
+
     private phase : number;
+
     private pos : number;
     private gravity : number;
     private bounceTimer : number;
-    private pressAnyKeyAlpha : number;
-
+   
 
     constructor(param : any, event : CoreEvent) {
-
-        event.transition.activate(false, TransitionEffectType.Fade,
-            1.0/30.0, null, new RGBA(1, 1, 1));
 
         this.waveTimer = 0.0;
 
@@ -41,6 +41,10 @@ export class TitleScreen implements Scene {
         this.gravity = 0;
 
         this.phase = 0;
+
+        this.flickerTimer = 0;
+
+        event.transition.deactivate();
     }
 
 
@@ -50,6 +54,7 @@ export class TitleScreen implements Scene {
         const GRAVITY_TARGET = 64.0;
         const GRAVITY_DELTA = 1.0;
         const ALPHA_SPEED = 0.033;
+        const FLICKER_TIME = 40;
 
         if (event.transition.isActive()) {
 
@@ -63,6 +68,19 @@ export class TitleScreen implements Scene {
             return;
         }
         this.fadingOut = false;
+
+        if (this.flickerTimer > 0) {
+
+            if ((this.flickerTimer -= event.step) <= 0) {
+
+                event.transition.activate(true, TransitionEffectType.Fade,
+                    1.0/60.0, event => {
+    
+                        event.changeScene(GameScene);
+                    }, new RGBA(1, 1, 1));
+            }
+            return;
+        }
 
         if (this.phase == 0) {
 
@@ -87,18 +105,15 @@ export class TitleScreen implements Scene {
             return;
         }
 
-        this.pressAnyKeyAlpha = updateSpeedAxis(this.pressAnyKeyAlpha, 1.0, ALPHA_SPEED*event.step);
+        this.pressAnyKeyAlpha = updateSpeedAxis(
+            this.pressAnyKeyAlpha, 1.0, ALPHA_SPEED*event.step);
+
+        this.waveTimer = (this.waveTimer + WAVE_TIME*event.step) % (Math.PI*2);
         
         if (event.input.anyPressed()) {
 
-            event.transition.activate(true, TransitionEffectType.Fade,
-                1.0/60.0, event => {
-
-                    event.changeScene(GameScene);
-                }, new RGBA(1, 1, 1));
+            this.flickerTimer = FLICKER_TIME;
         }
-
-        this.waveTimer = (this.waveTimer + WAVE_TIME*event.step) % (Math.PI*2);
     }
 
 
@@ -169,10 +184,13 @@ export class TitleScreen implements Scene {
 
         if (!this.fadingOut && this.phase >= 2) {
 
-            canvas.setColor(0.67, 1, 0.33, this.pressAnyKeyAlpha);
-            canvas.drawText(font, "PRESS ANY KEY", 
-                canvas.width/2, canvas.height/2 + 128, -26, 0, TextAlign.Center, 
-                1, 1, this.waveTimer, 32, Math.PI*2 / 12);
+            if (this.flickerTimer <= 0 || Math.floor(this.flickerTimer/4) % 2 == 0) {
+
+                canvas.setColor(0.67, 1, 0.33, this.pressAnyKeyAlpha);
+                canvas.drawText(font, "PRESS ANY KEY", 
+                    canvas.width/2, canvas.height/2 + 128, -26, 0, TextAlign.Center, 
+                    1, 1, this.waveTimer, 32, Math.PI*2 / 12);
+            }
             
             canvas.setColor(1.0, 1, 0.33);
             canvas.drawText(font, "(c) 2022 Jani Nyk@nen", 

@@ -18,7 +18,7 @@ export class Bitmap {
 
     constructor(gl : WebGLRenderingContext, image : HTMLImageElement, 
         data = <Uint8Array>null, width = 0, height = 0, makeFramebuffer = false,
-        filterType = FilterType.Nearest) {
+        filterType = FilterType.Linear) {
 
         const FILTERS = [gl.NEAREST, gl.LINEAR];
 

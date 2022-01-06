@@ -82,10 +82,10 @@ export class AudioIntro implements Scene {
 
         canvas.drawText(canvas.assets.getBitmap("font"), 
             QUESTION, 
-            canvas.width/2 - this.width*(64 + XOFF)/2, Y_POS, 
-            XOFF, YOFF, TextAlign.Left);
+            canvas.width/2 - this.width*(64 + XOFF) * 0.75 /2, Y_POS, 
+            XOFF, YOFF, TextAlign.Left, 0.75, 0.75);
 
-        this.yesNoMenu.draw(canvas, 0, 224, -26, 72, 0.75);
+        this.yesNoMenu.draw(canvas, 0, 224, -26, 60, 0.80);
     }
 
 

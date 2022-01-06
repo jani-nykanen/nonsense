@@ -122,12 +122,12 @@ export class Menu {
             if (i == this.cursorPos) {
 
                 canvas.setColor(1, 1, 0.33);
-                scale = ACTIVE_SCALE;
+                scale = fontScale * ACTIVE_SCALE;
             }
             else {
 
                 canvas.setColor();
-                scale = 1;
+                scale = fontScale;
             }
 
             canvas.drawText(font, this.buttons[i].getText(), 

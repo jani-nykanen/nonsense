@@ -37,6 +37,7 @@ export class GameScene implements Scene {
     private timer : number;
     private paused : boolean;
     private startPlayed : boolean;
+    private fadeOutScale : number;
 
     private readonly starFunc : StarGeneratingFunction;
 
@@ -60,6 +61,8 @@ export class GameScene implements Scene {
 
         this.timer = INITIAL_TIME * 60;
         this.paused = false;
+
+        this.fadeOutScale = 0;
 
         this.stars = new Array<Star> ();
     }
@@ -117,6 +120,11 @@ export class GameScene implements Scene {
 
                 this.player.updateWaitingAnimation(event);
             }
+            else {
+
+                this.fadeOutScale = 1.0 - event.transition.getTime();
+            }
+
             return;
         }
 
@@ -164,10 +172,12 @@ export class GameScene implements Scene {
             this.timer = Math.max(-60, this.timer - event.step);
             if (this.timer <= 0) {
 
-                this.timer = 0;
-                event.transition.activate(true, TransitionEffectType.Fade, 1.0/60.0,
-                    event => {
+                event.audio.playSample(event.assets.getSample("finish"), 0.70);
 
+                this.timer = 0;
+                event.transition.activate(true, TransitionEffectType.Fade, 1.0/120.0,
+                    event => {
+                        
                         event.changeScene(Ending);
                     }, new RGBA(1, 1, 1));
                 return;
@@ -295,12 +305,21 @@ export class GameScene implements Scene {
 
     public redraw(canvas: Canvas) : void {
         
+        const FADE_OUT_SCALE = 3.0;
+        const FADE_OUT_ROTATION = Math.PI/3;
         const OVERDRAW_ALPHA = 0.50;
 
         canvas.changeShader(ShaderType.Textured);
 
+        let scale = 1.0 + FADE_OUT_SCALE * this.fadeOutScale;
+        let angle = FADE_OUT_ROTATION * this.fadeOutScale;
+
         canvas.transform
             .loadIdentity()
+            .translate(canvas.width/2, canvas.height/2)
+            .rotate(angle)
+            .scale(scale, scale)
+            .translate(-canvas.width/2, -canvas.height/2)
             .setView(canvas.width, canvas.height)
             .use();
 
@@ -318,9 +337,7 @@ export class GameScene implements Scene {
         this.enemyGen.draw(canvas);
         this.player.draw(canvas);
 
-        canvas.transform
-            .loadIdentity()
-            .use();
+        canvas.transform.use();
 
         canvas.setColor();
         

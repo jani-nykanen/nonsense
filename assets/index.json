@@ -26,6 +26,7 @@
         {"name": "die", "path": "die.wav"},
         {"name": "hit", "path": "hit.wav"},
         {"name": "pause", "path": "pause.wav"},
+        {"name": "finish", "path": "finish.wav"},
         {"name": "bounce", "path": "bounce.wav"}
     ],
 

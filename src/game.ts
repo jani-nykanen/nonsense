@@ -81,6 +81,8 @@ export class GameScene implements Scene {
                 this.startPhase = 0;
                 this.startTimer = 0;
                 this.deathTimer = 0;
+                
+                this.fadeOutScale = 0;
 
                 this.startPlayed = false;
 
@@ -138,8 +140,14 @@ export class GameScene implements Scene {
 
             if ((this.startTimer += event.step) >= START_PHASE_TIME) {
 
-                if (this.startPhase == 0)
+                if (this.startPhase == 0) {
+                    
                     event.audio.playSample(event.assets.getSample("go"), 0.70);
+                }
+                else {
+
+                    event.audio.fadeInMusic(event.assets.getSample("theme"), 1.0, 1000);
+                }
 
                 this.startTimer -= START_PHASE_TIME;
                 ++ this.startPhase;
@@ -152,6 +160,15 @@ export class GameScene implements Scene {
         if (event.input.getAction("start") == State.Pressed) {
 
             this.paused = !this.paused;
+            if (this.paused) {
+
+                event.audio.pauseMusic();
+            }
+            else {
+
+                event.audio.resumeMusic();
+            }
+
             event.audio.playSample(event.assets.getSample("pause"), 0.60);
         }
         if (this.paused) return;
@@ -159,15 +176,6 @@ export class GameScene implements Scene {
         let p : Vector2;
 
         if (!this.player.isDying()) {
-
-            this.enemyGen.update(event);
-            if (this.enemyGen.playerCollision(this.player, event)) {
-
-                p = this.player.getPosition();
-
-                this.spawnStars(p.x, p.y, 8);
-                this.deathTimer = 0;
-            }
 
             this.timer = Math.max(-60, this.timer - event.step);
             if (this.timer <= 0) {
@@ -181,6 +189,17 @@ export class GameScene implements Scene {
                         event.changeScene(Ending);
                     }, new RGBA(1, 1, 1));
                 return;
+            }
+
+            this.enemyGen.update(event);
+            if (this.enemyGen.playerCollision(this.player, event)) {
+
+                p = this.player.getPosition();
+
+                this.spawnStars(p.x, p.y, 8);
+                this.deathTimer = 0;
+
+                event.audio.stopMusic();
             }
         }
         else {

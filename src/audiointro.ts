@@ -24,7 +24,7 @@ export class AudioIntro implements Scene {
 
         const START_SCENE = Intro;
         const INITIAL_SAMPLE_VOLUME = 0.50;
-        const INITIAL_MUSIC_VOLUME = 0.50;
+        const INITIAL_MUSIC_VOLUME = 0.80;
 
         this.yesNoMenu = new Menu(
             [

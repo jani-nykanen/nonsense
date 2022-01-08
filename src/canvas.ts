@@ -5,7 +5,7 @@ import { Shader } from "./shader.js";
 import { FragmentSource, VertexSource } from "./shadersource.js";
 import { Sprite } from "./sprite.js";
 import { Transformations } from "./transformations.js";
-import { RGBA, Vector3 } from "./vector.js";
+import { RGBA, Vector2, Vector3 } from "./vector.js";
 
 
 export const enum ShaderType {
@@ -185,7 +185,7 @@ export class Canvas {
         gl.enableVertexAttribArray(0);
         gl.enableVertexAttribArray(1);
 
-        gl.viewport(0, 0, this.width, this.height);
+        // gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     }
 
 
@@ -511,5 +511,11 @@ export class Canvas {
         filterTexture.bind(gl);
 
         gl.activeTexture(gl.TEXTURE0);
+    }
+
+
+    public getPhysicalSize() : Vector2 {
+
+        return new Vector2(this.canvas.width, this.canvas.height);
     }
 }

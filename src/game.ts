@@ -18,6 +18,7 @@ const START_PHASE_TIME = 60;
 const INITIAL_TIME = 60;
 const PLAYER_START_Y = 160;
 const DEATH_TIME = 30;
+const CONTROLS_FADE_TIME = 60;
 
 
 export type StarGeneratingFunction = (x : number, y : number, speedx : number, speedy : number, time : number, id : number) => void;
@@ -38,6 +39,7 @@ export class GameScene implements Scene {
     private paused : boolean;
     private startPlayed : boolean;
     private fadeOutScale : number;
+    private controlsFadeTimer : number;
 
     private readonly starFunc : StarGeneratingFunction;
 
@@ -63,6 +65,7 @@ export class GameScene implements Scene {
         this.paused = false;
 
         this.fadeOutScale = 0;
+        this.controlsFadeTimer = CONTROLS_FADE_TIME; 
 
         this.stars = new Array<Star> ();
     }
@@ -83,6 +86,7 @@ export class GameScene implements Scene {
                 this.deathTimer = 0;
                 
                 this.fadeOutScale = 0;
+                this.controlsFadeTimer = CONTROLS_FADE_TIME; 
 
                 this.startPlayed = false;
 
@@ -146,7 +150,7 @@ export class GameScene implements Scene {
                 }
                 else {
 
-                    event.audio.fadeInMusic(event.assets.getSample("theme"), 0.90, 1000);
+                    event.audio.fadeInMusic(event.assets.getSample("theme"), 0.925, 1000);
                 }
 
                 this.startTimer -= START_PHASE_TIME;
@@ -172,6 +176,11 @@ export class GameScene implements Scene {
             event.audio.playSample(event.assets.getSample("pause"), 0.60);
         }
         if (this.paused) return;
+
+        if (this.controlsFadeTimer > 0) {
+
+            this.controlsFadeTimer -= event.step;
+        }
 
         let p : Vector2;
 
@@ -263,8 +272,11 @@ export class GameScene implements Scene {
 
         const Y_OFF = 16;
         const MAX_SCALE = 0.5;
+        const CONTROL_FADE_START = 30;
+        const CONTROLS_SCALE = 0.67;
 
         let font = canvas.assets.getBitmap("font");
+        let controls = canvas.assets.getBitmap("controls");
 
         let str = String(Math.max(0, Math.floor(this.timer / 60)));
         
@@ -289,6 +301,34 @@ export class GameScene implements Scene {
                 canvas.width/2, canvas.height/2-32, 
                 -26, 0, TextAlign.Center);
         }
+
+        // Controls
+        if (this.controlsFadeTimer <= 0 && !this.paused) {
+
+            canvas.setColor();
+            return;
+        }
+
+        alpha = 1.0;
+        if (!this.paused && this.controlsFadeTimer < CONTROL_FADE_START) {
+
+            alpha = this.controlsFadeTimer / CONTROL_FADE_START;
+        }
+
+        canvas.setColor(1, 1, 1, alpha);
+
+        // Left
+        canvas.drawBitmapRegion(controls, 0, 0, 512, 256, 
+            0,  canvas.height - 256 * CONTROLS_SCALE,
+            controls.width * CONTROLS_SCALE, 
+            controls.height/2 * CONTROLS_SCALE);
+
+        // Right
+        canvas.drawBitmapRegion(controls, 0, 256, 512, 256, 
+            canvas.width - 512 * CONTROLS_SCALE,  
+            canvas.height - 256 * CONTROLS_SCALE,
+            controls.width * CONTROLS_SCALE, 
+            controls.height/2 * CONTROLS_SCALE);
 
         canvas.setColor();
     }

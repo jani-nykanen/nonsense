@@ -107,30 +107,31 @@ export class Core {
 
         const BAR_BORDER_WIDTH = 4;
 
-        let barWidth = canvas.width / 4;
+        let view = canvas.getPhysicalSize();
+
+        let barWidth = view.x / 4;
         let barHeight = barWidth / 8;
 
         //canvas.forceBindRectangleMesh();
 
-        canvas.transform
-            .loadIdentity()
-            .setView(canvas.width, canvas.height)
-            .use();
-
         canvas.changeShader(ShaderType.NoTexture);
 
-        canvas.setColor(0, 0, 0);
-        canvas.fillRect();
+        canvas.transform
+            .loadIdentity()
+            .setView(view.x, view.y)
+            .use();     
+
+        canvas.clear(0, 0.33, 0.67);
     
         let t = this.assets.dataLoadedUnit();
-        let x = canvas.width/2 - barWidth/2;
-        let y = canvas.height/2 - barHeight/2;
+        let x = view.x/2 - barWidth/2;
+        let y = view.y/2 - barHeight/2;
 
         // Outlines
         canvas.setColor();
         canvas.fillRect(x-BAR_BORDER_WIDTH*2, y-BAR_BORDER_WIDTH*2, 
             barWidth+BAR_BORDER_WIDTH*4, barHeight+BAR_BORDER_WIDTH*4);
-        canvas.setColor(0, 0, 0);
+        canvas.setColor(0, 0.33, 0.67);
         canvas.fillRect(x-BAR_BORDER_WIDTH, y-BAR_BORDER_WIDTH, 
             barWidth+BAR_BORDER_WIDTH*2, barHeight+BAR_BORDER_WIDTH*2);
     
@@ -176,20 +177,19 @@ export class Core {
             this.timeSum -= FRAME_WAIT;
         }
 
-        this.canvas.drawToFramebuffer(canvas => {
+        if (this.initialized) {
 
-            if (this.initialized) {
+            this.canvas.drawToFramebuffer(canvas => {
 
                 this.activeScene.redraw(canvas);
                 this.transition.draw(canvas);
-            }
-            else {
+            });
+            this.canvas.drawFramebufferTexture();
+        }
+        else {
 
-                this.drawLoadingScreen(canvas);
-            }
-        });
-        
-        this.canvas.drawFramebufferTexture();
+            this.drawLoadingScreen(this.canvas);
+        }
         this.canvas.transform.clearStacks();
 
         window.requestAnimationFrame(ts => this.loop(ts, onLoad));

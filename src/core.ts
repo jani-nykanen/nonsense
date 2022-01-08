@@ -110,6 +110,8 @@ export class Core {
         let barWidth = canvas.width / 4;
         let barHeight = barWidth / 8;
 
+        //canvas.forceBindRectangleMesh();
+
         canvas.transform
             .loadIdentity()
             .setView(canvas.width, canvas.height)

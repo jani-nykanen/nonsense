@@ -541,6 +541,6 @@ export class Player extends GameObject {
 
         this.dying = true;
 
-        event.audio.playSample(event.assets.getSample("die"), 0.60);
+        event.audio.playSample(event.assets.getSample("die"), 0.50);
     }
 }

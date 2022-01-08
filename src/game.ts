@@ -180,6 +180,7 @@ export class GameScene implements Scene {
             this.timer = Math.max(-60, this.timer - event.step);
             if (this.timer <= 0) {
 
+                event.audio.stopMusic();
                 event.audio.playSample(event.assets.getSample("finish"), 0.70);
 
                 this.timer = 0;

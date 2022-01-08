@@ -37,7 +37,7 @@ export class TitleScreen implements Scene {
         this.bounceTimer = 0;
         this.pressAnyKeyAlpha = 0;
 
-        this.pos = -400;
+        this.pos = -432;
         this.gravity = 0;
 
         this.phase = 0;
@@ -45,6 +45,8 @@ export class TitleScreen implements Scene {
         this.flickerTimer = 0;
 
         event.transition.deactivate();
+
+        event.transition.activate(false, TransitionEffectType.Fade, 1.0/30.0, null, new RGBA(1, 1, 1));
     }
 
 
@@ -63,9 +65,8 @@ export class TitleScreen implements Scene {
 
                 this.fadingOut = true;
                 this.fadeOutTimer = 1.0 - event.transition.getTime();
+                return;
             }
-
-            return;
         }
         this.fadingOut = false;
 
@@ -140,6 +141,8 @@ export class TitleScreen implements Scene {
             scale += FADE_OUT_SCALE * this.fadeOutTimer * this.fadeOutTimer;
         }
 
+        canvas.changeShader(ShaderType.Textured);
+
         canvas.transform
             .loadIdentity()
             .translate(canvas.width/2, canvas.height/2)
@@ -149,10 +152,7 @@ export class TitleScreen implements Scene {
             .setView(canvas.width, canvas.height)
             .use();
 
-        canvas.changeShader(ShaderType.NoTexture);    
-        canvas.fillRect();
-    
-        canvas.changeShader(ShaderType.Textured);
+        canvas.drawBitmap(canvas.assets.getBitmap("titleBackground"), 0, 0);
 
         let bounceScaleX = 1;
         let bounceScaleY = 1;

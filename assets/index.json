@@ -11,6 +11,7 @@
         {"name": "ending", "path": "ending.png"},
         {"name": "logo", "path": "logo.png"},
         {"name": "creator", "path": "creator.png"},
+        {"name": "titleBackground", "path": "title_background.png"},
 
         {"name": "font", "path": "font.png"}
     ],

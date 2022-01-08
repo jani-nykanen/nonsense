@@ -53,8 +53,8 @@ export class EnemyGenerator {
 
     private computeNewTime(index : number) : number {
 
-        const MIN_TIME = [90, 120, 150, 150, 180, 210];
-        const MAX_TIME = [180, 240, 300, 300, 360, 420];
+        const MIN_TIME = [120, 150, 180, 180, 210, 240];
+        const MAX_TIME = [210, 300, 360, 330, 390, 450];
 
         return Math.round(Math.random() * (MAX_TIME[index] - MIN_TIME[index]) + MIN_TIME[index]);
     }

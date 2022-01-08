@@ -30,6 +30,7 @@
         {"name": "finish", "path": "finish.wav"},
         {"name": "bounce", "path": "bounce.wav"},
 
+        {"name": "title", "path": "title.ogg"},
         {"name": "theme", "path": "theme.ogg"}
     ],
 

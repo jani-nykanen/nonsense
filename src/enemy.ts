@@ -172,14 +172,14 @@ export class Enemy extends GameObject {
                 
                 this.sprite.setFrame(0, 6);
 
-                event.audio.playSample(event.assets.getSample("kill"), 0.60);
+                event.audio.playSample(event.assets.getSample("kill"), 0.50);
             }
             else {
 
                 this.bounceTimer = BOUNCE_TIME;
                 this.speed.y = KNOCKBACK_Y;
 
-                event.audio.playSample(event.assets.getSample("bounce"), 0.60);
+                event.audio.playSample(event.assets.getSample("bounce"), 0.50);
             }
             return false;
         }

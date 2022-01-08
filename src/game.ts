@@ -132,7 +132,7 @@ export class GameScene implements Scene {
 
         if (!this.startPlayed) {
 
-            event.audio.playSample(event.assets.getSample("ready"), 0.70);
+            event.audio.playSample(event.assets.getSample("ready"), 0.60);
             this.startPlayed = true;
         }
 
@@ -142,11 +142,11 @@ export class GameScene implements Scene {
 
                 if (this.startPhase == 0) {
                     
-                    event.audio.playSample(event.assets.getSample("go"), 0.70);
+                    event.audio.playSample(event.assets.getSample("go"), 0.60);
                 }
                 else {
 
-                    event.audio.fadeInMusic(event.assets.getSample("theme"), 1.0, 1000);
+                    event.audio.fadeInMusic(event.assets.getSample("theme"), 0.90, 1000);
                 }
 
                 this.startTimer -= START_PHASE_TIME;

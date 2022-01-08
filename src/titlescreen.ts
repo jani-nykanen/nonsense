@@ -44,9 +44,10 @@ export class TitleScreen implements Scene {
 
         this.flickerTimer = 0;
 
-        event.transition.deactivate();
+        //event.transition.deactivate();
+        //event.transition.activate(false, TransitionEffectType.Fade, 1.0/30.0, null, new RGBA(1, 1, 1));
 
-        event.transition.activate(false, TransitionEffectType.Fade, 1.0/30.0, null, new RGBA(1, 1, 1));
+        event.audio.fadeInMusic(event.assets.getSample("title"), 0.85, 1000);
     }
 
 
@@ -116,6 +117,8 @@ export class TitleScreen implements Scene {
         if (event.input.anyPressed()) {
 
             this.flickerTimer = FLICKER_TIME;
+            
+            event.audio.stopMusic();
             event.audio.playSample(event.assets.getSample("start"), 0.60);
         }
     }

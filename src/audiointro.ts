@@ -23,8 +23,8 @@ export class AudioIntro implements Scene {
     constructor(param : any, event : CoreEvent) {
 
         const START_SCENE = Intro;
-        const INITIAL_SAMPLE_VOLUME = 0.50;
-        const INITIAL_MUSIC_VOLUME = 0.80;
+        const INITIAL_SAMPLE_VOLUME = 0.40;
+        const INITIAL_MUSIC_VOLUME = 0.50;
 
         this.yesNoMenu = new Menu(
             [

@@ -2,6 +2,8 @@
 
 **Nonsense** is a "rage game" for web. That's all.
 
+[**PLAY HERE**](https://jani-nykanen.itch.io/nonsense)
+
 -----
 
 ## Building

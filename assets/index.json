@@ -30,6 +30,8 @@
         {"name": "pause", "path": "pause.wav"},
         {"name": "finish", "path": "finish.wav"},
         {"name": "bounce", "path": "bounce.wav"},
+        {"name": "choose", "path": "choose.wav"},
+        {"name": "dive", "path": "dive.wav"},
 
         {"name": "title", "path": "title.ogg"},
         {"name": "theme", "path": "theme.ogg"}

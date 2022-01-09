@@ -123,6 +123,8 @@ export class Player extends GameObject {
     private fallingSlow : boolean;
     private slowFallWave : number;
 
+    private fastFallHit : boolean;
+
     private dir : number;
 
     private afterimages : Array<AfterImage>;
@@ -153,6 +155,7 @@ export class Player extends GameObject {
         this.doubleJump = false;
         this.fallingSlow = false;
         this.slowFallWave = 0.0;
+        this.fastFallHit = false;
 
         this.dir = 0;
 
@@ -207,6 +210,8 @@ export class Player extends GameObject {
         this.target.x = MOVEMENT_SPEED * stick.x;
         this.target.y = BASE_GRAVITY;
 
+        let oldFall = this.fastFall;
+
         this.fastFall = !(this.doubleJump && this.jumpTimer > 0) &&
             !this.fallingSlow &&
             this.canFastFall &&
@@ -215,6 +220,11 @@ export class Player extends GameObject {
 
             this.speed.y = FAST_FALL_SPEED;
             this.bonusJumpTimer = 0;
+
+            if (!oldFall) {
+
+                event.audio.playSample(event.assets.getSample("dive"), 0.50);
+            }
         }
         else {
 
@@ -244,7 +254,11 @@ export class Player extends GameObject {
                 this.speed.y = Math.max(this.speed.y, DOUBLE_JUMP_MIN);
             }
         }
-        else if ((event.input.getAction("jump") & State.DownOrPressed) == 0) {
+        
+        if ((this.doubleJump || (!this.fastFallHit &&
+                this.bonusJumpTimer <= 0 &&
+                this.jumpTimer > 0)) &&
+            (event.input.getAction("jump") & State.DownOrPressed) == 0) {
 
             this.jumpTimer = 0;
         }
@@ -509,7 +523,9 @@ export class Player extends GameObject {
 
         this.jumpTimer = JUMP_TIME;
         this.bonusJumpTimer = BONUS_JUMP_TIME;
-        
+
+        this.fastFallHit = this.fastFall;
+
         if (this.fastFall) {
 
             this.jumpTimer += FAST_FALL_BONUS;

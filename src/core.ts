@@ -106,11 +106,9 @@ export class Core {
     private drawLoadingScreen(canvas : Canvas) {
 
         const BAR_BORDER_WIDTH = 4;
+        const BAR_HEIGHT = 24;
 
         let view = canvas.getPhysicalSize();
-
-        let barWidth = view.x / 4;
-        let barHeight = barWidth / 8;
 
         //canvas.forceBindRectangleMesh();
 
@@ -118,25 +116,30 @@ export class Core {
 
         canvas.transform
             .loadIdentity()
-            .setView(view.x, view.y)
+            .fitHeight(480.0, view.x / view.y)
             .use();     
 
-        canvas.clear(0, 0.33, 0.67);
+        let viewport = canvas.transform.getViewport();
+
+        let barWidth = BAR_HEIGHT * 8;
+        let barHeight = BAR_HEIGHT;
+
+        canvas.clear(0, 0, 0);
     
         let t = this.assets.dataLoadedUnit();
-        let x = view.x/2 - barWidth/2;
-        let y = view.y/2 - barHeight/2;
+        let x = viewport.x/2 - barWidth/2;
+        let y = viewport.y/2 - barHeight/2;
 
         // Outlines
         canvas.setColor();
         canvas.fillRect(x-BAR_BORDER_WIDTH*2, y-BAR_BORDER_WIDTH*2, 
             barWidth+BAR_BORDER_WIDTH*4, barHeight+BAR_BORDER_WIDTH*4);
-        canvas.setColor(0, 0.33, 0.67);
+        canvas.setColor(0, 0, 0);
         canvas.fillRect(x-BAR_BORDER_WIDTH, y-BAR_BORDER_WIDTH, 
             barWidth+BAR_BORDER_WIDTH*2, barHeight+BAR_BORDER_WIDTH*2);
     
         // Bar
-        let w = (barWidth*t) | 0;
+        let w = barWidth*t;
         canvas.setColor();
         canvas.fillRect(x, y, w, barHeight);
         

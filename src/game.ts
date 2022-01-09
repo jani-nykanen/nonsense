@@ -150,7 +150,7 @@ export class GameScene implements Scene {
                 }
                 else {
 
-                    event.audio.fadeInMusic(event.assets.getSample("theme"), 0.925, 1000);
+                    event.audio.fadeInMusic(event.assets.getSample("theme"), 0.90, 1000);
                 }
 
                 this.startTimer -= START_PHASE_TIME;

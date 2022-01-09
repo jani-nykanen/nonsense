@@ -203,7 +203,7 @@ export class TitleScreen implements Scene {
                 canvas.width/2, canvas.height - 40, -26, 0, TextAlign.Center, 
                 0.5, 0.5);
 
-            canvas.setColor(0.67, 0.67, 0.67);
+            canvas.setColor(0.80, 0.80, 0.80);
             canvas.drawText(font, "Version " + VERSION, 
                 2, 2, -26, 0, TextAlign.Left, 
                 0.5, 0.5);

@@ -72,6 +72,8 @@ export class Ending implements Scene {
 
             if (event.input.anyPressed()) {
 
+                event.audio.playSample(event.assets.getSample("choose"), 0.60);
+
                 this.phase = 3;
                 event.transition.activate(true, TransitionEffectType.Fade,
                     1.0/240.0, event => {
